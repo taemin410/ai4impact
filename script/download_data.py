@@ -26,7 +26,7 @@ def downloadData():
 
     for csv in filelist:
         defaultlink = "https://ai4impact.org/P003/"
-        dirpath="data/forecast/"
+        dirpath="../data/forecast/"
         
         csvfilestr = csv + ".csv"
         csvfilewithb = csv + "-b.csv"
@@ -43,17 +43,17 @@ def downloadData():
 
     for csv in filelist:
         historicallink =  "https://ai4impact.org/P003/historical/"
-        dirpath="data/history/"
+        dirpath="../data/history/"
         
         csvfilestr = csv + ".csv"
         csvfilewithb = csv + "-b.csv"
         
-        url = defaultlink + csvfilestr
+        url = historicallink + csvfilestr
         savepath = dirpath + csvfilestr
         
         downloadFromUrl(url, savepath) 
 
-        url = defaultlink + csvfilewithb 
+        url = historicallink + csvfilewithb 
         savepath = dirpath + csvfilewithb 
         
         downloadFromUrl(url, savepath)
