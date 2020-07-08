@@ -48,12 +48,12 @@ def downloadData():
         csvfilestr = csv + ".csv"
         csvfilewithb = csv + "-b.csv"
         
-        url = defaultlink + csvfilestr
+        url = historicallink + csvfilestr
         savepath = dirpath + csvfilestr
         
         downloadFromUrl(url, savepath) 
 
-        url = defaultlink + csvfilewithb 
+        url = historicallink + csvfilewithb 
         savepath = dirpath + csvfilewithb 
         
         downloadFromUrl(url, savepath)
