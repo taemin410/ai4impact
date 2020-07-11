@@ -3,8 +3,9 @@ import torch
 import pandas as pd
 import os
 import numpy as np
-from preprocessing import * 
+from .preprocessing import * 
 from pdb_clone import pdb
+from settings import PROJECT_ROOT, DATA_DIR
 
 def normalize(data):
     if data.dim() == 1:
@@ -143,6 +144,9 @@ class final_dataset(data.Dataset):
             self.window = window
 
             self.target_day = 18
+            
+            # tmppath = os.path.join(PROJECT_ROOT + DATA_DIR + "/tmp")
+
             self.wind_data = wind_data_v2()
             self.weather_data = weather_data()
     def __getitem__(self,idx):
@@ -200,7 +204,7 @@ class final_dataset(data.Dataset):
 #     return test_split(x,y,ratio)
 
 
-if __name__ == "__main__":
-    dataset = wind_data_v2()
-    print(dataset[:10][0].shape, dataset[:10][1].shape)
-    print(dataset.data[54:59],'\n\n_________________\n',dataset[0:5], dataset)
+# if __name__ == "__main__":
+#     dataset = wind_data_v2()
+#     print(dataset[:10][0].shape, dataset[:10][1].shape)
+#     print(dataset.data[54:59],'\n\n_________________\n',dataset[0:5], dataset)

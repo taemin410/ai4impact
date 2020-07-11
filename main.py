@@ -1,12 +1,15 @@
 from torch.utils.data import DataLoader
-from src.dataset import *
-# torch.utils.data.DataLoader
+from src.dataset import final_dataset
+from src.utils.config import load_config
+from src.model import NN_Model
+import argparse
+import torch
 
 def main(args):
 
     # Load configurations 
-    configs = load_config()
-
+    configs = load_config('config.yml')
+    print(configs)
     # Preprocess the data
     split_ratio = 0.2
     wind_dataset = final_dataset(split_ratio)
@@ -18,19 +21,28 @@ def main(args):
 
     data =  Data(configs)
 
-    model = Model(configs)
+    model = NN_Model(input_dim=configs["model"]["hiddenlayers"], output_dim=1, hiddenlayers=configs["model"]["hiddenlayers"])
 
-    model.train()
-    pickle_save()
+    # model.train()
+    # pickle_save()
 
     # Evaluation phase
-    output = model.eval()
+    # output = model.eval()
 
-    log(output)
+    # log(output)
 
-
-
-# visualize(output)
+    # visualize(output)
 
 
 
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="ai4impact project")
+    
+    parser.add_argument("--mode", type=str, default='main')
+
+    args = parser.parse_args()
+
+    args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    globals()[args.mode](args)

@@ -1,0 +1,7 @@
+model:
+    hiddenlayers: [16,8,4]
+    mode: train
+    
+train:
+    batchsize: 8
+
