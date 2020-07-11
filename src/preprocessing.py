@@ -1,4 +1,3 @@
-from dataset import *
 from pdb_clone import pdb
 
 def test_split(x, y, ratio=0.2):
@@ -155,5 +154,4 @@ def concat_dataset(wind, weather, window=5, plus=18, forcast_future=6):
 
 
 if __name__ == "__main__":
-    trainx,trainy,testx,testy = load_dataset()
-    print(trainx.shape, trainy.shape, testx.shape, testy.shape)
+    pass
