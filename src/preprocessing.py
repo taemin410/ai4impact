@@ -1,5 +1,6 @@
 from dataset import *
 from pdb_clone import pdb
+
 def test_split(x, y, ratio=0.2):
     '''
     Input:
@@ -12,32 +13,8 @@ def test_split(x, y, ratio=0.2):
     split_idx = int(x.shape[0] * (1- ratio))
     return x[:split_idx], y[:split_idx], x[split_idx:], y[split_idx:]
 
-def momentum(data, ltime):
-    '''
-    Input:
-        data = torch.Tensor, time series data with shape (N,)
-        ltime = lead time (hrs)
-    Output:
-        momentum = torch.Tensor with shape (N-2 * ltime,)
-                   (N - 2* ltime) for consistency with force
-    '''
-    t_past = data[2*ltime:]
-    return data[ltime:-ltime] - t_past
 
-def force(data, ltime):
-    '''
-    Input:
-        data = torch.Tensor, time series data with shape (N,)
-        ltime = lead time (hrs)
-    Output:
-        force = torch.Tensor(N- 2 * ltime,)
-    '''
-    t_past = data[ltime:-ltime]
-    t_past_2 = data[ltime *2 : ]
-
-    return data[:-2*ltime] - 2* t_past + t_past_2
-
-def extract_time(time_frame, ltime):
+def extract_time_feature(time_frame):
     '''
     Input:
         time_frame = np.ndarray with shape (N,)
@@ -45,12 +22,52 @@ def extract_time(time_frame, ltime):
         output = torch.Tensor with shape (N - 2 * ltime, 2)
                 Month, hour are the two features extracted
     '''
-    time_frame = time_frame[2*ltime:]
+
+    time_frame = time_frame
     # extract month and hour
     features = torch.Tensor([ [int(time[5:7]), int(time[11:13])]  for time in time_frame])
     return torch.Tensor(features)
 
-def preprocess_wind_data(dataset, ltime = 18):
+
+def momentum(series, ltime):
+    '''
+    Input:
+        series = torch.Tensor, time series series with shape (N,)
+        ltime = lead time (hrs)
+    Output:
+        momentum = torch.Tensor with shape (N-2 * ltime,)
+                   (N - 2* ltime) for consistency with force
+    '''
+    t_past = series[2*ltime:]
+    return series[ltime:-ltime] - t_past
+
+def force(series, ltime):
+    '''
+    Input:
+        series = torch.Tensor, time series series with shape (N,)
+        ltime = lead time (hrs)
+    Output:
+        force = torch.Tensor(N- 2 * ltime,)
+    '''
+    t_past = series[ltime:-ltime]
+    t_past_2 = series[ltime *2 : ]
+
+    return series[:-2*ltime] - 2* t_past + t_past_2
+
+def difference_orders(series, ltime):
+    '''
+    Input:
+        series = torch.Tensor, time series series with shape (N,)
+        ltime = lead time (hrs)
+    Output:
+        momentum, force = first, second order differences
+    '''
+    x_t_2h = series[:-2*ltime]
+    x_t_h = series[ltime:-ltime]
+    x_t_0 = series[ltime *2 : ]
+    return (x_t_0 - x_t_h).unsqueeze(1), (x_t_0 - 2 * x_t_h + x_t_2h).unsqueeze(1)
+
+def preprocess(dataset, ltime = 18):
     '''
     Input:
         dataset = torch.utils.Dataset, time series wind dataset 
@@ -58,9 +75,10 @@ def preprocess_wind_data(dataset, ltime = 18):
     Output:
         preprocessed dataset
     '''
-    m = momentum(dataset.data, ltime).unsqueeze(1)
-    f = force(dataset.data, ltime).unsqueeze(1)
-    time_features = extract_time(dataset.time_frame, ltime) 
+    m,f = difference_orders(dataset, ltime)
+    # m = momentum(dataset.data, ltime).unsqueeze(1)
+    # f = force(dataset.data, ltime).unsqueeze(1)
+    time_features = extract_time_feature(dataset.time_frame, ltime) 
     assert time_features.shape[0] == f.shape[0]
     assert f.shape == m.shape 
 
@@ -68,7 +86,7 @@ def preprocess_wind_data(dataset, ltime = 18):
 
     return dataset
 
-# def preprocess_weather_data(dataset):
+# def preprocess_weather(dataset):
 #     '''
 
 #     '''
@@ -115,16 +133,7 @@ def concat_dataset(wind, weather, window=5, plus=18, forcast_future=6):
             x = torch.cat([x,row], axis=0)
 
     return x, y
-def load_train_test(window=5):
-    wind_dataset = wind_data()
-    wind_dataset = preprocess_wind_data(wind_dataset)
 
-    weather_dataset = weather_data()
-    # TODO: Any weather preprocessing ? 
-    # weather_dataset = preprocess_weather_data(weather_dataset)
-
-    x, y = concat_dataset(wind_dataset, weather_dataset,window) 
-    return test_split(x,y)
-
-a,b,c,d = load_train_test()
-print(a.shape, b.shape, c.shape, d.shape)
+if __name__ == "__main__":
+    trainx,trainy,testx,testy = load_dataset()
+    print(trainx.shape, trainy.shape, testx.shape, testy.shape)
