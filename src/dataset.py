@@ -14,34 +14,6 @@ def normalize(data):
         std = torch.std(data, axis=1).unsqueeze(1).repeat(1,data.shape[1])
         return  (data - mean) / std
 
-class wind_data(data.Dataset):
-    def __init__(self, wind_dir="../data/wind_energy.csv"):
-        '''
-        Attributes:
-            data : torch.Tensor
-            time_frame = np.ndarray() // time is stored in str type
-        '''
-        self.wind_dir = wind_dir
-        self.data, self.time_frame = self.load_data(wind_dir)
-        
-    def load_data(self,dirs_):
-
-        data_np = pd.read_csv(dirs_).values
-        time = data_np[:,1]
-        energy_np = data_np[:,2].astype(np.float64)
-        energy = torch.Tensor(energy_np)
-        # normalize energy generated
-        energy = normalize(energy)      
-        return energy, time
-
-    def __len__(self):
-        return self.data.shape[0]
-
-    def __getitem__(self,idx):
-        return self.data[idx]
-
-    def __repr__(self):
-        return "Wind Data : " + str(self_)
 
 class weather_data(data.Dataset):
     def __init__(self, root='../data/tmp/'):
@@ -160,17 +132,72 @@ class wind_data_v2(data.Dataset):
     def __repr__(self):
         return "Wind Data : " + str(self.data.shape)
 
+class final_dataset(data.Dataset):
+    def __init__(self, window=5, ltime=18):
+            '''
+            Attributes:
+                data : torch.Tensor
+                time_frame = np.ndarray() // time is stored in str type
+            '''
+            self.lead_time = ltime
+            self.window = window
 
-def load_dataset(window=5):
-    wind_dataset = wind_data()
-    wind_dataset = preprocess(wind_dataset)
+            self.target_day = 18
+            self.wind_data = wind_data_v2()
+            self.weather_data = weather_data()
+    def __getitem__(self,idx):
+        return self.format(idx)
 
-    weather_dataset = weather_data()
-    # TODO: Any weather preprocessing ? 
-    # weather_dataset = preprocess_weather_data(weather_dataset)
+    def format(self, idx):
+        wind_x, y = self.wind_data[idx]
+        weather_x = self.weather_data[idx]
+        x = self.concat(wind_x, weather_x)
+        return x,y
+    # TODO: To be done after weather dataset
+    # def concat(self, wind_x, weather_x):
 
-    x, y = concat_dataset(wind_dataset, weather_dataset,window) 
-    return test_split(x,y)
+# class wind_data(data.Dataset):
+#     def __init__(self, wind_dir="../data/wind_energy.csv"):
+#         '''
+#         Attributes:
+#             data : torch.Tensor
+#             time_frame = np.ndarray() // time is stored in str type
+#         '''
+#         self.wind_dir = wind_dir
+#         self.data, self.time_frame = self.load_data(wind_dir)
+        
+#     def load_data(self,dirs_):
+
+#         data_np = pd.read_csv(dirs_).values
+#         time = data_np[:,1]
+#         energy_np = data_np[:,2].astype(np.float64)
+#         energy = torch.Tensor(energy_np)
+#         # normalize energy generated
+#         energy = normalize(energy)      
+#         return energy, time
+
+#     def __len__(self):
+#         return self.data.shape[0]
+
+#     def __getitem__(self,idx):
+#         return self.data[idx]
+
+#     def __repr__(self):
+#         return "Wind Data : " + str(self_)
+
+
+
+# def load_dataset(window=5,ratio=0.2):
+#     wind_dataset = wind_data()
+#     wind_dataset = preprocess(wind_dataset)
+
+#     weather_dataset = weather_data()
+#     # TODO: Any weather preprocessing ? 
+#     # weather_dataset = preprocess_weather_data(weather_dataset)
+
+#     x, y = concat_dataset(wind_dataset, weather_dataset,window) 
+#     return test_split(x,y,ratio)
+
 
 if __name__ == "__main__":
     dataset = wind_data_v2()
