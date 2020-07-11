@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-from dataset import *
+from src.dataset import *
 # torch.utils.data.DataLoader
 
 def main(args):
@@ -9,7 +9,7 @@ def main(args):
 
     # Preprocess the data
     split_ratio = 0.2
-    wind_dataset = load_dataset(split_ratio)
+    wind_dataset = final_dataset(split_ratio)
 
     loader = DataLoader(wind_dataset, batch_size=8, shuffle=False, sampler=None,
            batch_sampler=None, num_workers=0, collate_fn=None,
