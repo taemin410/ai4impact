@@ -25,8 +25,26 @@ def extract_time_feature(time_frame):
 
     time_frame = time_frame
     # extract month and hour
-    features = torch.Tensor([ [int(time[5:7]), int(time[11:13])]  for time in time_frame])
-    return torch.Tensor(features)
+    features = torch.Tensor([ [int(time[5:7]), int(time[11:13])]  for time in time_frame]).long()
+    zero_time = torch.Tensor([0] * 24)
+    zero_month = torch.Tensor([0] * 12)
+    time_list = []
+    month_list = [] 
+    for i in range(time_frame.shape[0]):
+        one_hot_time = zero_time.clone()
+        one_hot_month = zero_month.clone()
+        
+        month = features[i][0]
+        time = features[i][1]
+
+        one_hot_time[time-1] = 1
+        one_hot_month[month-1] = 1
+
+        time_list.append(one_hot_time)
+        month_list.append(one_hot_month)
+    time = torch.stack(time_list)
+    month = torch.stack(month_list)
+    return torch.cat([time,month], axis=1)
 
 
 def momentum(series, ltime):
