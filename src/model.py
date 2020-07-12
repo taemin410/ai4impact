@@ -27,7 +27,7 @@ class NN_Model(nn.Module):
 
         return out
  
-    def train(self, dataset, epochs=10, batch_size=8, lr=0.001, writer=None):
+    def train(self, dataloader, epochs=10, batch_size=8, lr=0.001, writer=None):
 
         # Initialize loss function and optimizer 
         criterion = torch.nn.MSELoss()    # mean-squared error for regression
@@ -39,25 +39,29 @@ class NN_Model(nn.Module):
         # Train the model by epochs
         for epoch in range(epochs):
             loss_sum = 0 
-            for i in range(dataset.shape[0]//batch_size):
-                optimizer.zero_grad()
-                outputs = self(dataset[i*batch_size: (i+1)* batch_size][0]).squeeze(1)
 
-                # obtain the loss function
-                # TODO: find train_y from dataset \
-                # TODO: Add tensorboard write 
-                loss = criterion(outputs, dataset[i*batch_size: (i+1)* batch_size][1])
-                loss_sum += loss.clone()
-                loss.backward()
-                optimizer.step()
-            losses.append(loss_sum)
+            for xx, yy in dataloader:
+                print(xx)
 
-            # with torch.no_grad():
-            #     outputs = self(val_x).squeeze(1)
-            #     # val_loss = (torch.sum((outputs - val_y)**2) / outputs.shape[0])**0.5
-            #     val_loss = criterion(outputs, val_y)
-            #     val_losses.append(val_loss)
+                print("yy: ", yy)
+            #     optimizer.zero_grad()
+            #     outputs = self(dataloader[i*batch_size: (i+1)* batch_size][0]).squeeze(1)
+
+            #     # obtain the loss function
+            #     # TODO: find train_y from dataloader \
+            #     # TODO: Add tensorboard write 
+            #     loss = criterion(outputs, dataloader[i*batch_size: (i+1)* batch_size][1])
+            #     loss_sum += loss.clone()
+            #     loss.backward()
+            #     optimizer.step()
+            # losses.append(loss_sum)
+
+            # # with torch.no_grad():
+            # #     outputs = self(val_x).squeeze(1)
+            # #     # val_loss = (torch.sum((outputs - val_y)**2) / outputs.shape[0])**0.5
+            # #     val_loss = criterion(outputs, val_y)
+            # #     val_losses.append(val_loss)
                 
-            if epoch % 5 == 0:
-                print("Epoch: %d, loss: %1.5f" % (epochs, loss_sum))
+            # if epoch % 5 == 0:
+            #     print("Epoch: %d, loss: %1.5f" % (epochs, loss_sum))
 

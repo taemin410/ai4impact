@@ -9,7 +9,7 @@ import numpy as np
 from preprocessing import *
 
 from pdb_clone import pdb
-# from settings import PROJECT_ROOT, DATA_DIR
+from settings import PROJECT_ROOT, DATA_DIR
 
 def normalize(data):
     if data.dim() == 1:
@@ -21,7 +21,7 @@ def normalize(data):
 
 
 class weather_data(data.Dataset):
-    def __init__(self, root='../data/history_cleaned/',version=0):
+    def __init__(self, root=PROJECT_ROOT+'/data/history_cleaned/',version=0):
         self.weather_dirs_ = [root + str(dir_) for dir_ in os.listdir(root)]
         self.data, self.time_frame = self.load_data(self.weather_dirs_,version)
         # self.lead_time = 
@@ -78,7 +78,7 @@ class wind_data_v2(data.Dataset):
     '''
     difference between v1 v2 is that preprocessing happens inside the class
     '''
-    def __init__(self, window=5, ltime=18, difference=1, wind_dir="../data/wind_energy.csv"):
+    def __init__(self, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT+"/data/wind_energy.csv"):
         '''
         Attributes:
             data : torch.Tensor
@@ -179,12 +179,16 @@ class final_dataset(data.Dataset):
             '''
             self.lead_time = ltime
             self.window = window
-            # tmppath = os.path.join(PROJECT_ROOT + DATA_DIR + "/tmp")
+
             self.difference = difference
             self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference)
             self.weather_data = weather_data(version=version)
+
     def __getitem__(self,idx):
         return self.format(idx)
+
+    def __len__(self):
+        return len(self.wind_data)
 
     def collect_weather(self, idx):
         return self.weather_data.collect_forcast(idx)

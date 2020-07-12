@@ -16,24 +16,22 @@ def main(args):
     trainConfig = configs["train"]
 
     # Initialize SummaryWriter for tensorboard
-    writer = SummaryWriter()
+    # writer = SummaryWriter()
     
     # Preprocess the data
-    split_ratio = 0.2
-    wind_dataset = final_dataset(split_ratio)
+    wind_dataset = final_dataset()
 
     loader = DataLoader(wind_dataset, batch_size=8, shuffle=False, sampler=None,
            batch_sampler=None, num_workers=0, collate_fn=None,
            pin_memory=False, drop_last=False, timeout=0,
            worker_init_fn=None)
-    
-    wind_data = loader.dataset.wind_data
-    input_dim = wind_data[0:1][0].shape[1]
-    print(wind_data.data.shape, wind_data.raw.shape, wind_data.time_frame.shape)
+           
+
+    input_dim = wind_dataset[0:1][0].shape[1]
     # initialize Model 
     model = NN_Model(input_dim=input_dim, output_dim=1, hidden_layers=modelConfig["hiddenlayers"])
 
-    model.train(wind_data, writer=writer)
+    model.train(loader)
     # pickle_save()
 
     # Evaluation phase
