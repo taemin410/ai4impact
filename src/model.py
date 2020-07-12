@@ -39,7 +39,7 @@ class NN_Model(nn.Module):
         # Train the model by epochs
         for epoch in range(epochs):
             loss_sum = 0 
-            for i in range(dataset[0].shape[0]//batch_size):
+            for i in range(dataset.shape[0]//batch_size):
                 optimizer.zero_grad()
                 outputs = self(dataset[i*batch_size: (i+1)* batch_size][0]).squeeze(1)
 
@@ -52,12 +52,12 @@ class NN_Model(nn.Module):
                 optimizer.step()
             losses.append(loss_sum)
 
-            with torch.no_grad():
-                outputs = model(val_x).squeeze(1)
-                # val_loss = (torch.sum((outputs - val_y)**2) / outputs.shape[0])**0.5
-                val_loss = criterion(outputs, val_y)
-                val_losses.append(val_loss)
+            # with torch.no_grad():
+            #     outputs = self(val_x).squeeze(1)
+            #     # val_loss = (torch.sum((outputs - val_y)**2) / outputs.shape[0])**0.5
+            #     val_loss = criterion(outputs, val_y)
+            #     val_losses.append(val_loss)
                 
-        if epochs % 5 == 0:
-            print("Epoch: %d, loss: %1.5f" % (epochs, loss.item()))
+            if epoch % 5 == 0:
+                print("Epoch: %d, loss: %1.5f" % (epochs, loss_sum))
 

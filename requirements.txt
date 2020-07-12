@@ -1,4 +1,5 @@
 torch>=1.5.1
 pdb_clone>=1.10.1
 torchvision
+tensorboard
 

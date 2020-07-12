@@ -3,9 +3,9 @@ import torch
 import pandas as pd
 import os
 import numpy as np
-from preprocessing import * 
+from .preprocessing import * 
 from pdb_clone import pdb
-# from settings import PROJECT_ROOT, DATA_DIR
+from settings import PROJECT_ROOT, DATA_DIR
 
 def normalize(data):
     if data.dim() == 1:
@@ -17,7 +17,7 @@ def normalize(data):
 
 
 class weather_data(data.Dataset):
-    def __init__(self, root='../data/tmp/'):
+    def __init__(self, root=PROJECT_ROOT+'/data/tmp/'):
         # TODO: remove first 3 lines of weather forecast for each file
         #       weather forecast files are from 2020
         self.weather_dirs_ = [root + str(dir_) for dir_ in os.listdir(root)]
@@ -54,7 +54,7 @@ class wind_data_v2(data.Dataset):
     '''
     difference between v1 v2 is that preprocessing happens inside the class
     '''
-    def __init__(self, window=5, ltime=18, wind_dir="../data/wind_energy.csv"):
+    def __init__(self, window=5, ltime=18, wind_dir=PROJECT_ROOT+"/data/wind_energy.csv"):
         '''
         Attributes:
             data : torch.Tensor

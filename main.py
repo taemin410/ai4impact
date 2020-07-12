@@ -26,13 +26,14 @@ def main(args):
            batch_sampler=None, num_workers=0, collate_fn=None,
            pin_memory=False, drop_last=False, timeout=0,
            worker_init_fn=None)
-
-    data =  Data(configs)
-
+    
+    wind_data = loader.dataset.wind_data
+    input_dim = wind_data[0:1][0].shape[1]
+    print(wind_data.data.shape, wind_data.raw.shape, wind_data.time_frame.shape)
     # initialize Model 
-    model = NN_Model(input_dim=modelConfig["hiddenlayers"], output_dim=1, hiddenlayers=modelConfig["hiddenlayers"])
+    model = NN_Model(input_dim=input_dim, output_dim=1, hidden_layers=modelConfig["hiddenlayers"])
 
-    # model.train(writer=writer)
+    model.train(wind_data, writer=writer)
     # pickle_save()
 
     # Evaluation phase
