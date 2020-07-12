@@ -26,8 +26,7 @@ class NN_Model(nn.Module):
         out = self.layers[-1](x)
 
         return out
-
-    #TODO: how to take train dataset 
+ 
     def train(self, dataset, epochs=10, batch_size=8, lr=0.001, writer=None):
 
         # Initialize loss function and optimizer 
@@ -40,14 +39,14 @@ class NN_Model(nn.Module):
         # Train the model by epochs
         for epoch in range(epochs):
             loss_sum = 0 
-            for i in range(dataset.shape[0]//batch_size):
+            for i in range(dataset[0].shape[0]//batch_size):
                 optimizer.zero_grad()
-                outputs = self(dataset[i*batch_size: (i+1)* batch_size]).squeeze(1)
+                outputs = self(dataset[i*batch_size: (i+1)* batch_size][0]).squeeze(1)
 
                 # obtain the loss function
                 # TODO: find train_y from dataset \
                 # TODO: Add tensorboard write 
-                loss = criterion(outputs, train_y[i*batch_size: (i+1)* batch_size])
+                loss = criterion(outputs, dataset[i*batch_size: (i+1)* batch_size][1])
                 loss_sum += loss.clone()
                 loss.backward()
                 optimizer.step()
