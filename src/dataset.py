@@ -58,6 +58,7 @@ class weather_data(data.Dataset):
 
     def collect_forcast(self, idx, future=8):
         out = []
+        # pdb.set_trace()
         for i in range(idx.start, idx.stop):
             forecast = [ region[i//6: i//6 + future].reshape(-1) for region in self.data]
             add = torch.cat(forecast,axis=0)
@@ -121,9 +122,9 @@ class wind_data_v2(data.Dataset):
         window = self.window
         indices = range(window, idx.stop - idx.start, 1 if idx.step==None else idx.step)
         out = []
+        # pdb.set_trace()
         for i in iter(indices):
             out.append(data[i - window : i].unsqueeze(0))
-        print(indices)
         return torch.cat(out,axis=0)
             
     def __len__(self):
@@ -144,14 +145,15 @@ class wind_data_v2(data.Dataset):
         window = self.window
         # pdb.set_trace()
         start = 0 if idx.start == None else idx.start
-        end = self.data.shape[0] if idx.stop == None else idx.stop
-        # for extracting month, hour
+        end = self.data.shape[0] - 2 * ltime if idx.stop == None else idx.stop
+        if start < 0:
+            start += self.data.shape[0] - 2 * ltime
+        if end < 0:
+            end += self.data.shape[0] - 2 * ltime
+
         idx = slice(2 * ltime+ start , end + 2 * ltime, idx.step)
-        # for calculating momentum,force
         idx2 = slice(start, 2 * ltime + end, idx.step)
-        # for window collection
         idx3 = slice(start + 2 * ltime - window, end + 2 * ltime, idx.step)
-        # for target 
         idx4 = slice(start + 3 * ltime , end + 3 * ltime, idx.step)
 
         m,f = difference_orders(self.data[idx2], ltime)
@@ -159,7 +161,6 @@ class wind_data_v2(data.Dataset):
         window_data = self.collect_window(self.data[idx3], idx3)
         formatted_x = torch.cat([window_data, m, f, time_features], axis=1)
         y = self.data[idx4]
-
         assert formatted_x.shape[0] == y.shape[0]
         return formatted_x, y 
 
@@ -193,8 +194,11 @@ class final_dataset(data.Dataset):
         wind_x, y = self.wind_data[idx]
         # add warm up time
         start = 0 if idx.start == None else idx.start
-        end = self.data.shape[0] if idx.stop == None else idx.stop
-
+        end = self.wind_data.data.shape[0] if idx.stop == None else idx.stop
+        if start < 0:
+            start += self.wind_data.data.shape[0] - self.lead_time * 2
+        if end < 0:
+            end += self.wind_data.data.shape[0] - self.lead_time * 2
         print("Timeframe considered x(T+0) :", self.wind_data.time_frame[self.lead_time * 2 + start : self.lead_time * 2 + end])
 
         # (2 + self.difference) because adding differnce removes first ltime rows
@@ -203,16 +207,17 @@ class final_dataset(data.Dataset):
         weather_x = self.collect_weather(idx)
 
         assert wind_x.shape[0] == weather_x.shape[0]
-        x = self.concat(wind_x, weather_x)
+        x = torch.cat([wind_x, weather_x], axis=1)
         return x,y
         
-    def concat(self, wind_x, weather_x):
-        return torch.cat([wind_x, weather_x], axis=1)
 
 if __name__ == "__main__":
     dataset = final_dataset(difference=1,version=1)
     x , y= dataset[:3]
     print(x.shape, y.shape)
-    print(dataset[-2:])
+    print(dataset[:1])
+
+    # error in this one is due to the date range difference in forcast and energy history
+    print(dataset[-100:-90])
     # window + month_time(one hot) + 16 region * 8 future forecast * 2 (wind,direction)
     # 5 + 36  2+ 16 * 8 * 2 = 235
