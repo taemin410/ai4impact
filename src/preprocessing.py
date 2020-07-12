@@ -11,6 +11,14 @@ def extract_time_feature(time_frame):
     Input:
         time_frame = np.ndarray with shape (N,)
     Output:
+        output = torch.Tensor with shape (N , 36)
+                Month, hour are the two features extracted
+    '''
+def extract_time_feature(time_frame):
+    '''
+    Input:
+        time_frame = np.ndarray with shape (N,)
+    Output:
         output = torch.Tensor with shape (N - 2 * ltime, 36)
                 Month, hour are the two features extracted
     '''
@@ -39,6 +47,7 @@ def extract_time_feature(time_frame):
     return torch.cat([time,month], axis=1)
 
 
+
 def difference_orders(series, ltime):
     '''
     Input:
@@ -52,24 +61,24 @@ def difference_orders(series, ltime):
     x_t_0 = series[ltime *2 : ]
     return (x_t_0 - x_t_h).unsqueeze(1), (x_t_0 - 2 * x_t_h + x_t_2h).unsqueeze(1)
 
-def preprocess(dataset, ltime = 18):
-    '''
-    Input:
-        dataset = torch.utils.Dataset, time series wind dataset 
-        ltime = lead time
-    Output:
-        preprocessed dataset
-    '''
-    m,f = difference_orders(dataset, ltime)
-    # m = momentum(dataset.data, ltime).unsqueeze(1)
-    # f = force(dataset.data, ltime).unsqueeze(1)
-    time_features = extract_time_feature(dataset.time_frame, ltime) 
-    assert time_features.shape[0] == f.shape[0]
-    assert f.shape == m.shape 
+# def preprocess(dataset, ltime = 18):
+#     '''
+#     Input:
+#         dataset = torch.utils.Dataset, time series wind dataset 
+#         ltime = lead time
+#     Output:
+#         preprocessed dataset
+#     '''
+#     m,f = difference_orders(dataset, ltime)
+#     # m = momentum(dataset.data, ltime).unsqueeze(1)
+#     # f = force(dataset.data, ltime).unsqueeze(1)
+#     time_features = extract_time_feature(dataset.time_frame, ltime) 
+#     assert time_features.shape[0] == f.shape[0]
+#     assert f.shape == m.shape 
 
-    dataset.data = torch.cat([dataset.data[2*ltime:].unsqueeze(1), m, f, time_features], axis=1)
+#     dataset.data = torch.cat([dataset.data[2*ltime:].unsqueeze(1), m, f, time_features], axis=1)
 
-    return dataset
+#     return dataset
 
 if __name__ == "__main__":
     pass
