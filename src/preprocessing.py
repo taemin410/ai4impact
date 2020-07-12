@@ -25,7 +25,7 @@ def extract_time_feature(time_frame):
 
     time_frame = time_frame
     # extract month and hour
-    features = torch.Tensor([ [int(time[5:7]), int(time[11:13])]  for time in time_frame]).long()
+    features = torch.Tensor([ [time.month, time.hour]  for time in time_frame]).long()
     zero_time = torch.Tensor([0] * 24)
     zero_month = torch.Tensor([0] * 12)
     time_list = []
@@ -151,8 +151,6 @@ def concat_dataset(wind, weather, window=5, plus=18, forcast_future=6):
             x = torch.cat([x,row], axis=0)
 
     return x, y
-
-
 
 if __name__ == "__main__":
     pass
