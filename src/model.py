@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from torch.nn import functional as F  
 
@@ -25,3 +26,39 @@ class NN_Model(nn.Module):
         out = self.layers[-1](x)
 
         return out
+
+    #TODO: how to take train dataset 
+    def train(self, dataset, epochs=10, batch_size=8, lr=0.001, writer=None):
+
+        # Initialize loss function and optimizer 
+        criterion = torch.nn.MSELoss()    # mean-squared error for regression
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        
+        losses = []
+        val_losses = [] 
+        
+        # Train the model by epochs
+        for epoch in range(epochs):
+            loss_sum = 0 
+            for i in range(dataset.shape[0]//batch_size):
+                optimizer.zero_grad()
+                outputs = self(dataset[i*batch_size: (i+1)* batch_size]).squeeze(1)
+
+                # obtain the loss function
+                # TODO: find train_y from dataset \
+                # TODO: Add tensorboard write 
+                loss = criterion(outputs, train_y[i*batch_size: (i+1)* batch_size])
+                loss_sum += loss.clone()
+                loss.backward()
+                optimizer.step()
+            losses.append(loss_sum)
+
+            with torch.no_grad():
+                outputs = model(val_x).squeeze(1)
+                # val_loss = (torch.sum((outputs - val_y)**2) / outputs.shape[0])**0.5
+                val_loss = criterion(outputs, val_y)
+                val_losses.append(val_loss)
+                
+        if epochs % 5 == 0:
+            print("Epoch: %d, loss: %1.5f" % (epochs, loss.item()))
+
