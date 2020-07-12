@@ -4,4 +4,4 @@ model:
     
 train:
     batchsize: 8
-
+    logging: True

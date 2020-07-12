@@ -1,7 +1,10 @@
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+
 from src.dataset import final_dataset
 from src.utils.config import load_config
 from src.model import NN_Model
+
 import argparse
 import torch
 
@@ -9,7 +12,12 @@ def main(args):
 
     # Load configurations 
     configs = load_config('config.yml')
-    print(configs)
+    modelConfig = configs["model"]
+    trainConfig = configs["train"]
+
+    # Initialize SummaryWriter for tensorboard
+    writer = SummaryWriter()
+    
     # Preprocess the data
     split_ratio = 0.2
     wind_dataset = final_dataset(split_ratio)
@@ -21,9 +29,10 @@ def main(args):
 
     data =  Data(configs)
 
-    model = NN_Model(input_dim=configs["model"]["hiddenlayers"], output_dim=1, hiddenlayers=configs["model"]["hiddenlayers"])
+    # initialize Model 
+    model = NN_Model(input_dim=modelConfig["hiddenlayers"], output_dim=1, hiddenlayers=modelConfig["hiddenlayers"])
 
-    # model.train()
+    # model.train(writer=writer)
     # pickle_save()
 
     # Evaluation phase
