@@ -1,0 +1,26 @@
+[
+    {
+        "trade_num": 0,
+        "trade_info": {
+            "trade_type": "shortfall",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 210,
+                "diff_in_energy": 200
+            },
+            "loss": 16000.0
+        }
+    },
+    {
+        "trade_num": 1,
+        "trade_info": {
+            "trade_type": "shortfall",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 210,
+                "diff_in_energy": 200
+            },
+            "loss": 20000
+        }
+    }
+]

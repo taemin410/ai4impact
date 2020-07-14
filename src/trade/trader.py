@@ -1,3 +1,9 @@
+from datetime import datetime
+from src.utils.logger import logger
+
+EXCESS_TRADE = "excess"
+SHORTFALL_TRADE = "shortfall"
+EXACT_TRADE = "exact"
 
 IINITIAL_CASH_OFFERINGS = 1000
 SELL_PRICE = 10
@@ -14,48 +20,68 @@ class trader():
         self._forecast_data = forecast_data
     
     def trade(self) -> float:
+        logger_ = logger(datetime.now())
+
         for i, (real_val, forecast_val) in enumerate(zip(self._real_data, self._forecast_data)):
             if i < self.lead_time:  # warm-up
                 continue
             
+            trade_type, diff, lost_val = self._initialize_trade()
+
             if forecast_val < real_val: # excess
-                self._manage_excess()
+                trade_type = EXCESS_TRADE
+                diff, lost_val = self._manage_excess(real_val, forecast_val)
+
             elif forecast_val > real_val:   # shortfall
-                self._manage_shortfall(real_val, forecast_val)          
+                trade_type = SHORTFALL_TRADE
+                diff, lost_val = self._manage_shortfall(real_val, forecast_val)         
 
             self._sell(forecast_val)
 
+            logger_.append_trade_data(i, trade_type, real_val, forecast_val, diff, lost_val)
+
+        logger_.log_trade_history()
         return self._cash_at_hand
 
     def pay_back(self) -> float:
+        """
+            Pay back the initial money offered.
+        """
         self._cash_at_hand -= IINITIAL_CASH_OFFERINGS
+        return self._cash_at_hand
+
+    def _initialize_trade(self) -> tuple:
+        return EXACT_TRADE, 0, 0
 
     def _sell(self, forecast_val) -> None:
         earnings = forecast_val * SELL_PRICE
         self._cash_at_hand += earnings
 
-    def _manage_excess(self) -> None:
-        pass
+    def _manage_excess(self, real_val, forecast_val) -> tuple:
+        excess_energy = real_val - forecast_val
+        loss = excess_energy * 10
+        return excess_energy, loss
 
-    def _manage_shortfall(self, real_val, forecast_val) -> None:
+    def _manage_shortfall(self, real_val, forecast_val) -> tuple:
         shortfall_energy = forecast_val - real_val
         shortfall_money = shortfall_energy * BUY_PRICE
-        loss = 0
+        cost = 0
 
         if shortfall_money > self._cash_at_hand:    # charge fine
 
             if self._cash_at_hand <= 0: # no money at hand to pay for the shortfall
-                loss += shortfall_energy * FINE
+                cost += shortfall_energy * FINE
 
             else:   # some of the shortfall payable by the cash at hand 
                 non_payable_shortfall = shortfall_money - self._cash_at_hand
                 payable_shortfall = shortfall_money - non_payable_shortfall
-                loss += (non_payable_shortfall / BUY_PRICE * FINE) + payable_shortfall
+                cost += (non_payable_shortfall / BUY_PRICE * FINE) + payable_shortfall
                 
         else:   # no fine, but pay for the shortfall
-            loss += shortfall_money
+            cost += shortfall_money
 
-        self._cash_at_hand -= loss
+        self._cash_at_hand -= cost
+        return shortfall_energy, cost
 
         
 

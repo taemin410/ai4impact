@@ -1,0 +1,62 @@
+[
+    {
+        "trade_num": 0,
+        "trade_info": {
+            "trade_type": "exact",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 10,
+                "diff_in_energy": 0
+            },
+            "loss": 0
+        }
+    },
+    {
+        "trade_num": 1,
+        "trade_info": {
+            "trade_type": "exact",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 10,
+                "diff_in_energy": 0
+            },
+            "loss": 0
+        }
+    },
+    {
+        "trade_num": 2,
+        "trade_info": {
+            "trade_type": "exact",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 10,
+                "diff_in_energy": 0
+            },
+            "loss": 0
+        }
+    },
+    {
+        "trade_num": 3,
+        "trade_info": {
+            "trade_type": "exact",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 10,
+                "diff_in_energy": 0
+            },
+            "loss": 0
+        }
+    },
+    {
+        "trade_num": 4,
+        "trade_info": {
+            "trade_type": "exact",
+            "energy_info": {
+                "real_val_kW": 10,
+                "forecast_val_kW": 10,
+                "diff_in_energy": 0
+            },
+            "loss": 0
+        }
+    }
+]
