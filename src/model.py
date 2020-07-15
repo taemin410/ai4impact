@@ -28,7 +28,7 @@ class NN_Model(nn.Module):
 
         return out
 
-    def train(self, trainloader, validationloader, epochs=10, batch_size=8, lr=0.01, writer=None):
+    def train(self, trainloader, validationloader, epochs=10, lr=0.01, writer=None):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.MSELoss()  # mean-squared error for regression
@@ -86,5 +86,7 @@ class Persistance(nn.Module):
         self.delay = delay
 
     def forward(self, x):
+        if self.delay == 0:
+            return x
         return x[:,-self.delay]
 

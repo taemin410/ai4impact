@@ -2,7 +2,7 @@ import torch
 
 
 def calculate_rmse(ytrue, ypred):
-    result = (ytrue, ypred) ** 2
+    result = (ytrue - ypred) ** 2
     rmse = (torch.sum(result) / result.shape[0]) ** 0.5
     return rmse
 
