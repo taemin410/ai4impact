@@ -46,11 +46,8 @@ class NN_Model(nn.Module):
                 optimizer.zero_grad()
                 outputs = self(xx).squeeze(1)
 
-                # # obtain the loss function
-                # # TODO: find train_y from dataloader \
-                # # TODO: Add tensorboard write
-                # print(outputs.shape, yy.shape)
-
+                # obtain the loss function
+                # TODO: Add tensorboard write
                 loss = criterion(outputs, yy.squeeze(1))
                 loss_sum += loss.clone()
                 loss.backward()
@@ -59,7 +56,6 @@ class NN_Model(nn.Module):
             losses.append(loss_sum)
             with torch.no_grad():
                 outputs = self(dataloader.dataset[0:100][0]).squeeze(1)
-                # val_loss = (torch.sum((outputs - val_y)**2) / outputs.shape[0])**0.5
                 val_loss = criterion(outputs, dataloader.dataset[0:100][1].squeeze(1))
                 val_losses.append(val_loss)
 

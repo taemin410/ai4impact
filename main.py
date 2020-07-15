@@ -36,6 +36,8 @@ def main(args):
         worker_init_fn=None,
     )
 
+
+    # TEMPORARY CODE TO TEST MODEL TRAIN/TEST
     n = 300
     input_dim = 300
     import numpy as np
