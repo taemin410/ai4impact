@@ -36,20 +36,18 @@ def main(args):
         worker_init_fn=None,
     )
 
+    split_ratio = 0.2
+    batch_size = 16
 
-    # TEMPORARY CODE TO TEST MODEL TRAIN/TEST
-    n = 300
-    input_dim = 300
-    import numpy as np
+    for epoch in range(num_epochs):
+        # Train:   
+        for batch_index, (faces, labels) in enumerate(train_loader):
 
-    x = np.random.standard_normal(size=(n, input_dim))
-    y = np.random.randint(low=0, high=2, size=(n, 1))
+
+
+        train_dataset, val_dataset, test_dataset = final_dataset(split_ratio, batch_size)
 
     # input_dim = wind_dataset[0:1][0].shape[1]
-
-    data = torch.utils.data.TensorDataset(
-        torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float)
-    )
 
     loader = torch.utils.data.DataLoader(data, batch_size=8)
 
@@ -85,3 +83,4 @@ if __name__ == "__main__":
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     globals()[args.mode](args)
+        
