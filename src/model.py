@@ -76,3 +76,14 @@ class NN_Model(nn.Module):
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
 
         return (rmse, ypred)
+
+
+class Persistance(nn.Module):
+
+    def __init(self, delay):
+        super().init()
+        self.delay = delay
+
+    def forward(self, x):
+        return x[:,-self.delay]
+
