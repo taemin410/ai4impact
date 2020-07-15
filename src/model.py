@@ -28,7 +28,7 @@ class NN_Model(nn.Module):
 
         return out
 
-    def train(self, dataloader, epochs=10, batch_size=8, lr=0.001, writer=None):
+    def train(self, trainloader, validationloader, epochs=10, batch_size=8, lr=0.01, writer=None):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.MSELoss()  # mean-squared error for regression
@@ -41,33 +41,38 @@ class NN_Model(nn.Module):
         for epoch in range(epochs):
             loss_sum = 0
 
-            for xx, yy in dataloader:
+            for xx, yy in trainloader:
 
                 optimizer.zero_grad()
-                outputs = self(xx).squeeze(1)
+                outputs = self(xx)
 
+                outputs = outputs.squeeze(1)
+                
                 # obtain the loss function
                 # TODO: Add tensorboard write
-                loss = criterion(outputs, yy.squeeze(1))
+                loss = criterion(outputs, yy)
                 loss_sum += loss.clone()
                 loss.backward()
                 optimizer.step()
-
+            
             losses.append(loss_sum)
-            with torch.no_grad():
-                outputs = self(dataloader.dataset[0:100][0]).squeeze(1)
-                val_loss = criterion(outputs, dataloader.dataset[0:100][1].squeeze(1))
-                val_losses.append(val_loss)
+            # with torch.no_grad():
+            #     outputs = self(validationloader.dataset[0:100][0]).squeeze(1)
+            #     val_loss = criterion(outputs, validationloader.dataset[0:100][1].squeeze(1))
+            #     val_losses.append(val_loss)
 
             if epoch % 5 == 0:
-                print("Epoch: %d, loss: %1.5f" % (epoch, loss_sum))
+                print("Epoch: %d, loss: %1.5f" % (epoch, loss.item()))
 
         print("---train finished---")
 
-    def test(self, testX, ytrue):
+    def test(self, test_loader):
+        
+        testX = test_loader.dataset.tensors[0]
+        testY = test_loader.dataset.tensors[1]
 
         ypred = self(testX).squeeze(1)
-        result = (ytrue - ypred) ** 2  # squared error
+        result = (testY - ypred) ** 2  # squared error
 
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
 
