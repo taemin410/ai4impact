@@ -20,25 +20,28 @@ class trader():
         self._forecast_data = forecast_data
     
     def trade(self) -> float:
+        """
+            Deals with different trade scenario based on forecast and real value.
+        """
         logger_ = logger(datetime.now())
 
-        for i, (real_val, forecast_val) in enumerate(zip(self._real_data, self._forecast_data)):
+        for i, (real_val, predict_val) in enumerate(zip(self._real_data, self._forecast_data)):
             if i < self.lead_time:  # warm-up
                 continue
             
             trade_type, diff, lost_val = self._initialize_trade()
 
-            if forecast_val < real_val: # excess
+            if predict_val < real_val: # excess
                 trade_type = EXCESS_TRADE
-                diff, lost_val = self._manage_excess(real_val, forecast_val)
+                diff, lost_val = self._manage_excess(real_val, predict_val)
 
-            elif forecast_val > real_val:   # shortfall
+            elif predict_val > real_val:   # shortfall
                 trade_type = SHORTFALL_TRADE
-                diff, lost_val = self._manage_shortfall(real_val, forecast_val)         
+                diff, lost_val = self._manage_shortfall(real_val, predict_val)         
 
-            self._sell(forecast_val)
+            self._sell(predict_val)
 
-            logger_.append_trade_data(i, trade_type, real_val, forecast_val, diff, lost_val)
+            logger_.append_trade_data(i, trade_type, real_val, predict_val, diff, lost_val, self._cash_at_hand)
 
         logger_.log_trade_history()
         return self._cash_at_hand
@@ -53,17 +56,17 @@ class trader():
     def _initialize_trade(self) -> tuple:
         return EXACT_TRADE, 0, 0
 
-    def _sell(self, forecast_val) -> None:
-        earnings = forecast_val * SELL_PRICE
+    def _sell(self, predict_val) -> None:
+        earnings = predict_val * SELL_PRICE
         self._cash_at_hand += earnings
 
-    def _manage_excess(self, real_val, forecast_val) -> tuple:
-        excess_energy = real_val - forecast_val
+    def _manage_excess(self, real_val, predict_val) -> tuple:
+        excess_energy = real_val - predict_val
         loss = excess_energy * 10
         return excess_energy, loss
 
-    def _manage_shortfall(self, real_val, forecast_val) -> tuple:
-        shortfall_energy = forecast_val - real_val
+    def _manage_shortfall(self, real_val, predict_val) -> tuple:
+        shortfall_energy = predict_val - real_val
         shortfall_money = shortfall_energy * BUY_PRICE
         cost = 0
 

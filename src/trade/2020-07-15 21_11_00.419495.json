@@ -9,7 +9,8 @@
                 "diff_in_energy": 200
             },
             "loss": 16000.0
-        }
+        },
+        "current_cash_at_hand": -12900.0
     },
     {
         "trade_num": 1,
@@ -21,6 +22,7 @@
                 "diff_in_energy": 200
             },
             "loss": 20000
-        }
+        },
+        "current_cash_at_hand": -30800.0
     }
 ]

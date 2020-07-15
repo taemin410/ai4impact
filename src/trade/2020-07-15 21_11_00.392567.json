@@ -9,7 +9,8 @@
                 "diff_in_energy": 0
             },
             "loss": 0
-        }
+        },
+        "current_cash_at_hand": 1100
     },
     {
         "trade_num": 1,
@@ -21,7 +22,8 @@
                 "diff_in_energy": 0
             },
             "loss": 0
-        }
+        },
+        "current_cash_at_hand": 1200
     },
     {
         "trade_num": 2,
@@ -33,7 +35,8 @@
                 "diff_in_energy": 0
             },
             "loss": 0
-        }
+        },
+        "current_cash_at_hand": 1300
     },
     {
         "trade_num": 3,
@@ -45,7 +48,8 @@
                 "diff_in_energy": 0
             },
             "loss": 0
-        }
+        },
+        "current_cash_at_hand": 1400
     },
     {
         "trade_num": 4,
@@ -57,6 +61,7 @@
                 "diff_in_energy": 0
             },
             "loss": 0
-        }
+        },
+        "current_cash_at_hand": 1500
     }
 ]
