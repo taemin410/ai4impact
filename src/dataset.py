@@ -58,10 +58,10 @@ class weather_data(data.Dataset):
             print(dir_)
             tmp = pd.read_csv(dir_)
             tmp['Time'] = tmp['Time'].apply(lambda x : dt.strptime(x[2:-3]+":00", '%y/%m/%d %H:%M:%S'))
-            for i, row in tmp[:-1].iterrows():
-                if (tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') > 0.25:
-                    add = pd.DataFrame(tmp['Time'][i])
-                    tmp = concat([tmp.iloc[:i], add,tmp.iloc[i:]]).reset_index(drop=True)
+            # for i, row in tmp[:-1].iterrows():
+            #     if (tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') > 0.25:
+            #         add = pd.DataFrame(tmp['Time'][i])
+            #         tmp = concat([tmp.iloc[:i], add,tmp.iloc[i:]]).reset_index(drop=True)
             tmp = tmp.values
             time = tmp[:,0]
 
