@@ -297,13 +297,13 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
     test_dataset = dataset[test_indices]
     #####################################################
     train_dataset = torch.utils.data.TensorDataset(
-            torch.tensor(train_dataset[0], dtype=torch.float), torch.tensor(train_dataset[1], dtype=torch.float)
+            train_dataset[0].clone().detach() , train_dataset[1].clone().detach()
         )
     val_dataset = torch.utils.data.TensorDataset(
-            torch.tensor(val_dataset[0], dtype=torch.float), torch.tensor(val_dataset[1], dtype=torch.float)
+            val_dataset[0].clone().detach() , val_dataset[1].clone().detach()
         )
     test_dataset = torch.utils.data.TensorDataset(
-            torch.tensor(test_dataset[0], dtype=torch.float), torch.tensor(test_dataset[1], dtype=torch.float)
+            test_dataset[0].clone().detach() , test_dataset[1].clone().detach()
         )
     #####################################################
     # Creating data samplers

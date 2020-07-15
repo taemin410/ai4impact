@@ -20,6 +20,8 @@ class NN_Model(nn.Module):
             current_input_dim = hidden_dim
         # add the last layer
         self.layers.append(nn.Linear(current_input_dim, self.output_dim))
+        
+        print(self.layers)
 
     def forward(self, x):
         for layer in self.layers[:-1]:
@@ -28,7 +30,7 @@ class NN_Model(nn.Module):
 
         return out
 
-    def train(self, trainloader, validationloader, epochs=10, batch_size=8, lr=0.01, writer=None):
+    def train(self, trainloader, validationloader, epochs=10, lr=0.01, writer=None):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.MSELoss()  # mean-squared error for regression
@@ -86,5 +88,7 @@ class Persistance(nn.Module):
         self.delay = delay
 
     def forward(self, x):
+        if self.delay == 0:
+            return x
         return x[:,-self.delay]
 
