@@ -54,7 +54,7 @@ class weather_data(data.Dataset):
             dirs_ = [dir_ for dir_ in dirs_ if '-b' not in dir_]
         elif version == 2:
             dirs_ = [dir_ for dir_ in dirs_ if '-b' in dir_]
-        pdb.set_trace()
+        # pdb.set_trace()
         for dir_ in dirs_:
             print(dir_)
             tmp = pd.read_csv(dir_)
@@ -169,7 +169,7 @@ class wind_data_v2(data.Dataset):
         energy = torch.Tensor(energy_np)
         raw = energy.clone()
         # normalize energy generated
-        # energy = normalize(energy)
+        energy = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
@@ -268,7 +268,7 @@ class final_dataset(data.Dataset):
 
         return x,y
         
-def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, val_ratio=0.2, batch_size=16):
+def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, val_ratio=0.2, batch_size=8):
     '''
     Input:
         window
@@ -295,6 +295,17 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
     train_dataset = dataset[train_indices]
     val_dataset = dataset[val_indices]
     test_dataset = dataset[test_indices]
+    #####################################################
+    train_dataset = torch.utils.data.TensorDataset(
+            torch.tensor(train_dataset[0], dtype=torch.float), torch.tensor(train_dataset[1], dtype=torch.float)
+        )
+    val_dataset = torch.utils.data.TensorDataset(
+            torch.tensor(val_dataset[0], dtype=torch.float), torch.tensor(val_dataset[1], dtype=torch.float)
+        )
+    test_dataset = torch.utils.data.TensorDataset(
+            torch.tensor(test_dataset[0], dtype=torch.float), torch.tensor(test_dataset[1], dtype=torch.float)
+        )
+    #####################################################
     # Creating data samplers
     train_sampler = SequentialSampler(train_dataset)
     valid_sampler = SequentialSampler(val_dataset)
@@ -304,7 +315,7 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
                                             sampler=train_sampler)
     validation_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
                                                     sampler=valid_sampler)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=len(test_dataset),
                                                         sampler=test_sampler)
 
     return train_loader, validation_loader, test_loader
