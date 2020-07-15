@@ -12,6 +12,9 @@ sys.path.insert(0,os.path.abspath(os.path.join('..')))
 from settings import PROJECT_ROOT, DATA_DIR
 from torch.utils.data import SequentialSampler
 
+FORECAST_ROW_NUM = 5114
+FORECAST_TIME_INTERVAL = 6
+
 def normalize(data):
     if data.dim() == 1:
         return (data - torch.mean(data))/ torch.std(data)
@@ -27,7 +30,7 @@ class weather_data(data.Dataset):
         self.data, self.time_frame = self.load_data(self.weather_dirs_,version)
         self.time_interval = time_interval
         self.version = version
-        self.last_idx = 5114 
+        self.last_idx = FORECAST_ROW_NUM 
 
 
     def __getitem__(self,idx):
@@ -50,17 +53,24 @@ class weather_data(data.Dataset):
             dirs_ = [dir_ for dir_ in dirs_ if '-b' not in dir_]
         elif version == 2:
             dirs_ = [dir_ for dir_ in dirs_ if '-b' in dir_]
-
+        pdb.set_trace()
         for dir_ in dirs_:
+            print(dir_)
             tmp = pd.read_csv(dir_)
             tmp['Time'] = tmp['Time'].apply(lambda x : dt.strptime(x[2:-3]+":00", '%y/%m/%d %H:%M:%S'))
+            for i, row in tmp[:-1].iterrows():
+                if (tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') > 0.25:
+                    add = pd.DataFrame(tmp['Time'][i])
+                    tmp = concat([tmp.iloc[:i], add,tmp.iloc[i:]]).reset_index(drop=True)
             tmp = tmp.values
             time = tmp[:,0]
 
             speed_direction_np = tmp[:,1:].astype(np.float64)
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed 
-            speed_direction[:,0] = normalize(speed_direction[:,0])
+            # speed_direction[:,0] = normalize(speed_direction[:,0])
+            # TODO: Angle represetnation change
+            # 
             forcast.append(speed_direction)      
             times.append(time)
             
@@ -69,6 +79,7 @@ class weather_data(data.Dataset):
     def collect_forcast(self, idx, future=8, time_interval=6):
         '''
         idx = index of __getitem__
+        t_0 = x(T+0) frame 
         time_interval = time inverval of forcast model
         future = number of future frames to collect
         '''
@@ -109,7 +120,7 @@ class wind_data_v2(data.Dataset):
         if difference == 1: 
             self.data, self.time_frame, self.raw= self.to_difference()
         self.first_idx = (2 + difference) * ltime
-        self.last_idx = 5114 * 6 - 48
+        self.last_idx = FORECAST_ROW_NUM * FORECAST_TIME_INTERVAL - 48
         
     def __getitem__(self,idx):
         if isinstance(idx,int):
@@ -124,13 +135,13 @@ class wind_data_v2(data.Dataset):
         # pdb.set_trace()
         ltime= self.lead_time
         window = self.window
-
+        # a= final_dataset | a[10:20]
         start = idx.start
         end = idx.stop
         
         idx = slice(start , end, idx.step)
         idx2 = slice(start - 2*ltime, end, idx.step)
-        idx3 = slice(start - window, end, idx.step)
+        idx3 = slice(start - window + 1, end, idx.step)
         idx4 = slice(start + ltime , end + ltime, idx.step)
 
         time_features = extract_time_feature(self.time_frame[idx]) 
@@ -138,11 +149,12 @@ class wind_data_v2(data.Dataset):
         window_data = self.collect_window(self.data[idx3], idx3)
         
         y = self.data[idx4]
+        # print('',window_data)
         formatted_x = torch.cat([window_data, m, f, time_features], axis=1)
 
         assert formatted_x.shape[0] == y.shape[0]
         # window column + difference orders +  time features(month, time) of frame T+0 
-        assert formatted_x.shape[1] == (5 + 2 + 36)
+        assert formatted_x.shape[1] == (self.window + 2 + 36)
 
         return formatted_x, y 
 
@@ -156,7 +168,7 @@ class wind_data_v2(data.Dataset):
         energy = torch.Tensor(energy_np)
         raw = energy.clone()
         # normalize energy generated
-        energy = normalize(energy)
+        # energy = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
@@ -173,8 +185,10 @@ class wind_data_v2(data.Dataset):
 
 
     def collect_window(self,data,idx):
+        # pdb.set_trace()
+
         window = self.window
-        indices = range(window, idx.stop - idx.start, 1 if idx.step==None else idx.step)
+        indices = range(window , idx.stop - idx.start +1 , 1 if idx.step==None else idx.step)
         out = []
         # pdb.set_trace()
         for i in iter(indices):
@@ -210,14 +224,14 @@ class final_dataset(data.Dataset):
 
             self.first_idx = (2 + difference) * ltime
             # maximum index that has a target
-            self.last_idx = 5114 * 6 - 48#min([a.data.shape[0] * 6 for a in self.weather_data.data ]) - 8
+            self.last_idx = 5114 * 6 - 48 # min([a.data.shape[0] * 6 for a in self.weather_data.data ]) - 8
 
     def collect_weather(self, idx):
         return self.weather_data.collect_forcast(idx)
 
     def __getitem__(self,idx):
         if isinstance(idx,int):
-            idx = slice(idx-1 , idx, 1)
+            idx = slice(idx, idx+1, 1)
         if isinstance(idx, list):
             idx = slice(min(idx), max(idx) + 1, 1)
 
@@ -228,19 +242,23 @@ class final_dataset(data.Dataset):
 
     def format(self, idx):
         # pdb.set_trace()  
+        # dataset[:20] => slice(None, 20, None) | dataset[1:20] slice (1,20,None)
         start = 0 if idx.start == None else idx.start
         end = self.last_idx if idx.stop == None else idx.stop
         if start >= 0:
             add = 1
         # apply warmup time
         start += self.last_idx if start < 0 else self.first_idx
-        end += self.last_idx if end < 0 else self.first_idx\
+        end += self.last_idx if end < 0 else self.first_idx 
+
         # when timeframe has no target
         if end > self.last_idx :
             end =  self.last_idx 
         idx = slice(start , end, idx.step)
+        # print(idx)
         print("Timeframe considered x(T+0) :", self.wind_data.time_frame[idx])
         wind_x ,y = self.wind_data[idx]
+        
         weather_x = self.collect_weather(idx)
         x = torch.cat([wind_x, weather_x], axis=1)
 
@@ -265,7 +283,7 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
     indices = list(range(dataset_size))
     split = int(np.floor((1 - split_ratio) * dataset_size))
     val_split = int(split * (1 - val_ratio))
-    print(dataset_size)
+
     # split idxs
     train_indices, test_indices = indices[:split], indices[split:]
     train_indices, val_indices = train_indices[:val_split], train_indices[val_split:]
@@ -288,11 +306,9 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
     return train_loader, validation_loader, test_loader
 
 if __name__ == "__main__":
-    # dataset = final_dataset(difference=1,version=0)
-    # x , y= dataset[-10:-5]
-    # print(x.shape, y.shape)
-    # x , y= dataset[1:3]
-    # print(x.shape, y.shape)
-    train,val,test = load_dataset()
+    dataset = final_dataset(difference=0,version=0)
+    x , y= dataset[3]
+    print(x, y)
+    # train,val,test = load_dataset()
     
     # print(dataset[:1])

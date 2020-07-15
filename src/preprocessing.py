@@ -11,7 +11,7 @@ def extract_time_feature(time_frame):
     Input:
         time_frame = np.ndarray with shape (N,)
     Output:
-        output = torch.Tensor with shape (N - 2 * ltime, 36)
+        output = torch.Tensor with shape (N , 36)
                 Month, hour are the two features extracted
     '''
 
