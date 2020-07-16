@@ -27,7 +27,7 @@ def main(args):
         input_dim=299, output_dim=1, hidden_layers=modelConfig["hiddenlayers"]
     )
 
-    model.train(train_loader, validation_loader, epochs=1)
+    model.train(train_loader, validation_loader, epochs=10)
 
     rmse = model.test(test_loader)
     print("RMSE:  ", rmse)

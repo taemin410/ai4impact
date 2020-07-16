@@ -57,17 +57,20 @@ class NN_Model(nn.Module):
                 loss.backward()
                 optimizer.step()
             
-            losses.append(loss_sum)
-            # with torch.no_grad():
-            #     outputs = self(validationloader.dataset[0:100][0]).squeeze(1)
-            #     val_loss = criterion(outputs, validationloader.dataset[0:100][1].squeeze(1))
-            #     val_losses.append(val_loss)
+            #TODO: writer.add(losssum)
+            with torch.no_grad():
+                valX = validationloader.dataset.tensors[0]
+                valY = validationloader.dataset.tensors[1]
 
-            if epoch % 5 == 0:
-                print("Epoch: %d, loss: %1.5f" % (epoch, loss.item()))
+                outputs = self(valX).squeeze(1)
+                val_loss = criterion(outputs, valY)
+                #TODO: writer.add(val_loss)
+
+            if epoch % 1 == 0:
+                print("Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f" % (epoch, loss.item(), loss_sum))
 
         print("---train finished---")
-
+        
     def test(self, test_loader):
         
         testX = test_loader.dataset.tensors[0]
