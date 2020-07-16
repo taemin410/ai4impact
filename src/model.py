@@ -84,9 +84,6 @@ class NN_Model(nn.Module):
 
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
         
-        print("ypred", ypred[:10])
-        print("ytrue", testY[:10])
-        
         for i in range(list(testY.size())[0]):
             self.writer.add_scalars("test/pred", {
                 'ypred': ypred[i],
