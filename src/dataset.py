@@ -1,6 +1,7 @@
 from torch.utils import data
 import torch
 import pandas as pd
+import datetime
 from datetime import datetime as dt
 import numpy as np
 # from .preprocessing import *
@@ -53,22 +54,29 @@ class weather_data(data.Dataset):
             dirs_ = [dir_ for dir_ in dirs_ if '-b' not in dir_]
         elif version == 2:
             dirs_ = [dir_ for dir_ in dirs_ if '-b' in dir_]
-        pdb.set_trace()
         for dir_ in dirs_:
             print(dir_)
             tmp = pd.read_csv(dir_)
             tmp['Time'] = tmp['Time'].apply(lambda x : dt.strptime(x[2:-3]+":00", '%y/%m/%d %H:%M:%S'))
-            # for i, row in tmp[:-1].iterrows():
-            #     if (tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') > 0.25:
-            #         add = pd.DataFrame(tmp['Time'][i])
-            #         tmp = concat([tmp.iloc[:i], add,tmp.iloc[i:]]).reset_index(drop=True)
+            added = 0
+            for i, row in tmp[:-1].iterrows():
+                row = pd.DataFrame(row).transpose()
+                time_diff = int((tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') / 0.25) -1 
+                if time_diff != 0:
+                    new_row = []
+                    for j in range(time_diff):
+                        row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
+                        new_row.append(row.copy())
+                    tmp = pd.concat([tmp[:i+added+1]] + new_row + [tmp[i+added+1:]])
+                    added += time_diff                        
+            tmp.to_csv('../data/tmp/'+dir_[dir_.rfind('/'):])
             tmp = tmp.values
             time = tmp[:,0]
 
             speed_direction_np = tmp[:,1:].astype(np.float64)
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed 
-            # speed_direction[:,0] = normalize(speed_direction[:,0])
+            speed_direction[:,0] = normalize(speed_direction[:,0])
             # TODO: Angle represetnation change
             # 
             forcast.append(speed_direction)      
@@ -135,7 +143,7 @@ class wind_data_v2(data.Dataset):
         # pdb.set_trace()
         ltime= self.lead_time
         window = self.window
-        # a= final_dataset | a[10:20]
+
         start = idx.start
         end = idx.stop
         
@@ -168,7 +176,7 @@ class wind_data_v2(data.Dataset):
         energy = torch.Tensor(energy_np)
         raw = energy.clone()
         # normalize energy generated
-        # energy = normalize(energy)
+        energy = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
