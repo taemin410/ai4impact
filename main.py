@@ -14,20 +14,19 @@ def main(args):
     # Load configurations
     configs = load_config("config.yml")
     modelConfig = configs["model"]
-    trainConfig = configs["train"]
 
     # Initialize SummaryWriter for tensorboard
     writer = SummaryWriter()
 
     # Preprocess the data
-    train_loader, validation_loader, test_loader = load_dataset(batch_size=16)
+    train_loader, validation_loader, test_loader = load_dataset(batch_size=modelConfig["batchsize"])
         
     # initialize Model
     model = NN_Model(
         input_dim=299, output_dim=1, hidden_layers=modelConfig["hiddenlayers"], writer=writer
     )
 
-    model.train(train_loader, validation_loader, epochs=10)
+    model.train(train_loader, validation_loader, epochs=modelConfig["epochs"], lr=modelConfig["lr"])
 
     rmse = model.test(test_loader)
     print("RMSE:  ", rmse)
