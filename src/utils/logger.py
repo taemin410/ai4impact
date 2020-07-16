@@ -1,6 +1,7 @@
 import json
+from torch.utils.tensorboard import SummaryWriter
 
-class logger():
+class logger(SummaryWriter):
     def __init__(self, trade_id, model_info=None, trade_info=None):
         self.trade_id = trade_id
         self.model_info = model_info
