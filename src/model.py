@@ -5,8 +5,10 @@ from torch.utils.data import dataloader
 
 
 class NN_Model(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_layers):
+    def __init__(self, input_dim, output_dim, hidden_layers, writer):
         super().__init__()
+
+        self.writer = writer
 
         # Store input and output dimensions to instance var
         self.input_dim = input_dim
@@ -30,7 +32,7 @@ class NN_Model(nn.Module):
 
         return out
 
-    def train(self, trainloader, validationloader, epochs=10, lr=0.01, writer=None):
+    def train(self, trainloader, validationloader, epochs=10, lr=0.01):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.MSELoss()  # mean-squared error for regression
@@ -57,14 +59,15 @@ class NN_Model(nn.Module):
                 loss.backward()
                 optimizer.step()
             
-            #TODO: writer.add(losssum)
             with torch.no_grad():
                 valX = validationloader.dataset.tensors[0]
                 valY = validationloader.dataset.tensors[1]
 
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
-                #TODO: writer.add(val_loss)
+
+            self.writer.add_scalar("loss", loss_sum, epoch)
+            self.writer.add_scalar("val_loss", val_loss, epoch)
 
             if epoch % 1 == 0:
                 print("Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f" % (epoch, loss.item(), loss_sum))
@@ -80,6 +83,15 @@ class NN_Model(nn.Module):
         result = (testY - ypred) ** 2  # squared error
 
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
+        
+        print("ypred", ypred[:10])
+        print("ytrue", testY[:10])
+        
+        for i in range(list(testY.size())[0]):
+            self.writer.add_scalars("test/pred", {
+                'ypred': ypred[i],
+                'ytrue': testY[i],
+            }, i)
 
         return (rmse, ypred)
 
