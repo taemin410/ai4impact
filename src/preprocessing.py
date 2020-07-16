@@ -1,6 +1,6 @@
 from pdb_clone import pdb
 import torch
-
+import numpy as np
 def test_split(x, y, ratio=0.2):
     split_idx = int(x.shape[0] * (1- ratio))
     return x[:split_idx], y[:split_idx], x[split_idx:], y[split_idx:]
@@ -37,7 +37,14 @@ def extract_time_feature(time_frame):
     time = torch.stack(time_list)
     month = torch.stack(month_list)
     return torch.cat([time,month], axis=1)
-
+def change_representation(angles):
+    '''
+    
+    '''
+    angles = angles * np.pi / 180
+    cos = torch.cos(angles).unsqueeze(1)
+    sin = torch.cos(angles).unsqueeze(1)
+    return torch.cat([cos, sin], axis=1)
 
 
 def difference_orders(series, ltime):

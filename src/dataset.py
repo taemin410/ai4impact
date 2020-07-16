@@ -50,38 +50,28 @@ class weather_data(data.Dataset):
         '''
         forcast = []
         times = []
+        # pdb.set_trace()
         if version == 1:
             dirs_ = [dir_ for dir_ in dirs_ if '-b' not in dir_]
         elif version == 2:
             dirs_ = [dir_ for dir_ in dirs_ if '-b' in dir_]
         for dir_ in dirs_:
             print(dir_)
-            tmp = pd.read_csv(dir_)
-            tmp['Time'] = tmp['Time'].apply(lambda x : dt.strptime(x[2:-3]+":00", '%y/%m/%d %H:%M:%S'))
-            added = 0
-            for i, row in tmp[:-1].iterrows():
-                row = pd.DataFrame(row).transpose()
-                time_diff = int((tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') / 0.25) -1 
-                if time_diff != 0:
-                    new_row = []
-                    for j in range(time_diff):
-                        row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
-                        new_row.append(row.copy())
-                    tmp = pd.concat([tmp[:i+added+1]] + new_row + [tmp[i+added+1:]])
-                    added += time_diff                        
-            tmp.to_csv('../data/tmp/'+dir_[dir_.rfind('/'):])
+            tmp = pd.read_csv(dir_,header=0)
+            tmp['Time'] = tmp['Time'].apply(lambda x : dt.strptime(x[2:-3]+":00", '%y-%m-%d %H:%M:%S'))
             tmp = tmp.values
-            time = tmp[:,0]
+            time = tmp[:,1]
 
-            speed_direction_np = tmp[:,1:].astype(np.float64)
+            speed_direction_np = tmp[:,2:].astype(np.float64)
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed 
             speed_direction[:,0] = normalize(speed_direction[:,0])
             # TODO: Angle represetnation change
-            # 
+            speed_direction = torch.cat([speed_direction[:,0].unsqueeze(1),change_representation(speed_direction[:,1])],axis=1)
+            assert speed_direction.shape[1] == 3
+            
             forcast.append(speed_direction)      
             times.append(time)
-            
         return forcast, times
 
     def collect_forcast(self, idx, future=8, time_interval=6):
@@ -99,7 +89,7 @@ class weather_data(data.Dataset):
             out.append(add)
         out = torch.stack(out)
         # number of region * number of frames  *number of columns (direction, speed) 
-        assert out.shape[1] == 8* (2 if self.version == 0 else 1)* future  *  2 
+        assert out.shape[1] == 8* (2 if self.version == 0 else 1)* future  *  3 
         return out
 
     def __repr__(self):
