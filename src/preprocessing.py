@@ -14,14 +14,6 @@ def extract_time_feature(time_frame):
         output = torch.Tensor with shape (N , 36)
                 Month, hour are the two features extracted
     '''
-def extract_time_feature(time_frame):
-    '''
-    Input:
-        time_frame = np.ndarray with shape (N,)
-    Output:
-        output = torch.Tensor with shape (N - 2 * ltime, 36)
-                Month, hour are the two features extracted
-    '''
 
     # extract month and hour
     features = torch.Tensor([ [time.month, time.hour]  for time in time_frame]).long()
@@ -51,10 +43,10 @@ def extract_time_feature(time_frame):
 def difference_orders(series, ltime):
     '''
     Input:
-        series = torch.Tensor, time series series with shape (N,)
+        series = torch.Tensor, time series series with shape (N + ltime*2,)
         ltime = lead time (hrs)
     Output:
-        momentum, force = first, second order differences
+        momentum, force = Each is tensor shaped (1,N) with first, second order differences respectively
     '''
     x_t_2h = series[:-2*ltime]
     x_t_h = series[ltime:-ltime]
