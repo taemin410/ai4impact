@@ -7,7 +7,13 @@ from src.model import NN_Model
 
 import argparse
 import torch
+from datetime import datetime
 
+def write_configs(writer, configs):
+    configstr=""
+    for i in configs:
+        configstr+= str(i)+" : "+ str(configs[i]) + "\n"
+    writer.add_text("CONFIGS", configstr, 0)
 
 def main(args):
 
@@ -15,9 +21,12 @@ def main(args):
     configs = load_config("config.yml")
     modelConfig = configs["model"]
 
-    # Initialize SummaryWriter for tensorboard
-    writer = SummaryWriter()
+    time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    logdir = "runs/" + time
 
+    # Initialize SummaryWriter for tensorboard
+    writer = SummaryWriter(logdir)
+    write_configs(writer, modelConfig)
     # Preprocess the data
     train_loader, validation_loader, test_loader = load_dataset(batch_size=modelConfig["batchsize"])
         
@@ -28,8 +37,10 @@ def main(args):
 
     model.train(train_loader, validation_loader, epochs=modelConfig["epochs"], lr=modelConfig["lr"])
 
-    rmse = model.test(test_loader)
+    rmse, ypred = model.test(test_loader)
     print("RMSE:  ", rmse)
+    
+    writer.add_text("RMSE", str(rmse.item()), 0)
 
     writer.close()
 

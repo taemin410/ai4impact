@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.data import dataloader
-
+import math
 
 class NN_Model(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_layers, writer):
@@ -55,7 +55,7 @@ class NN_Model(nn.Module):
                 # obtain the loss function
                 # TODO: Add tensorboard write
                 loss = criterion(outputs, yy)
-                loss_sum += loss.clone()
+                loss_sum += loss.item()  
                 loss.backward()
                 optimizer.step()
             
@@ -65,9 +65,10 @@ class NN_Model(nn.Module):
 
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
+            
 
-            self.writer.add_scalar("loss", loss_sum, epoch)
-            self.writer.add_scalar("val_loss", val_loss, epoch)
+            self.writer.add_scalar("Loss/train", loss_sum/len(trainloader), epoch)
+            self.writer.add_scalar("Loss/validation", val_loss, epoch)
 
             if epoch % 1 == 0:
                 print("Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f" % (epoch, loss.item(), loss_sum))
