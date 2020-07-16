@@ -17,20 +17,22 @@ def main(args):
     trainConfig = configs["train"]
 
     # Initialize SummaryWriter for tensorboard
-    # writer = SummaryWriter()
+    writer = SummaryWriter()
 
     # Preprocess the data
     train_loader, validation_loader, test_loader = load_dataset(batch_size=16)
         
     # initialize Model
     model = NN_Model(
-        input_dim=299, output_dim=1, hidden_layers=modelConfig["hiddenlayers"]
+        input_dim=299, output_dim=1, hidden_layers=modelConfig["hiddenlayers"], writer=writer
     )
 
     model.train(train_loader, validation_loader, epochs=10)
 
     rmse = model.test(test_loader)
     print("RMSE:  ", rmse)
+
+    writer.close()
 
     # # Evaluation phase
     # # output = model.eval()
