@@ -4,17 +4,21 @@ import pandas as pd
 import datetime
 from datetime import datetime as dt
 import numpy as np
+import sys,os
+# sys.path.insert(0,os.path.abspath(os.path.join('..')))
 # from .preprocessing import *
-from preprocessing import *
+from src.preprocessing import *
 
 from pdb_clone import pdb
-import sys,os
-sys.path.insert(0,os.path.abspath(os.path.join('..')))
+
 from settings import PROJECT_ROOT, DATA_DIR
 from torch.utils.data import SequentialSampler
 
-FORECAST_ROW_NUM = 5114
+# FORECAST_ROW_NUM = 5137
+# FORECAST_TIME_INTERVAL = 6
+FORECAST_ROW_NUM = 166
 FORECAST_TIME_INTERVAL = 6
+
 
 def normalize(data):
     if data.dim() == 1:
@@ -65,7 +69,7 @@ class weather_data(data.Dataset):
             speed_direction_np = tmp[:,2:].astype(np.float64)
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed 
-            speed_direction[:,0] = normalize(speed_direction[:,0])
+            # speed_direction[:,0] = normalize(speed_direction[:,0])
             # TODO: Angle represetnation change
             speed_direction = torch.cat([speed_direction[:,0].unsqueeze(1),change_representation(speed_direction[:,1])],axis=1)
             assert speed_direction.shape[1] == 3
@@ -89,7 +93,7 @@ class weather_data(data.Dataset):
             out.append(add)
         out = torch.stack(out)
         # number of region * number of frames  *number of columns (direction, speed) 
-        assert out.shape[1] == 8* (2 if self.version == 0 else 1)* future  *  3 
+        # assert out.shape[1] == 8* (2 if self.version == 0 else 1)* future  *  3 
         return out
 
     def __repr__(self):
@@ -122,7 +126,7 @@ class wind_data_v2(data.Dataset):
         
     def __getitem__(self,idx):
         if isinstance(idx,int):
-            idx = slice(idx-1 , idx, 1)
+            idx = slice(idx , idx+1, 1)
         return self.format(idx)
 
     def format(self,idx):
@@ -145,9 +149,9 @@ class wind_data_v2(data.Dataset):
         time_features = extract_time_feature(self.time_frame[idx]) 
         m,f = difference_orders(self.data[idx2], ltime)
         window_data = self.collect_window(self.data[idx3], idx3)
-        
+        # TODO:
+        # window_avg, window_std = self.window_stats(window_data)
         y = self.data[idx4]
-        # print('',window_data)
         formatted_x = torch.cat([window_data, m, f, time_features], axis=1)
 
         assert formatted_x.shape[0] == y.shape[0]
@@ -155,6 +159,8 @@ class wind_data_v2(data.Dataset):
         assert formatted_x.shape[1] == (self.window + 2 + 36)
 
         return formatted_x, y 
+    def window_stats(self, data):
+        pass
 
     def load_data(self,dirs_):
 
@@ -166,7 +172,7 @@ class wind_data_v2(data.Dataset):
         energy = torch.Tensor(energy_np)
         raw = energy.clone()
         # normalize energy generated
-        energy = normalize(energy)
+        # energy = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
@@ -203,7 +209,7 @@ class wind_data_v2(data.Dataset):
 
 
 class final_dataset(data.Dataset):
-    def __init__(self, window=5, ltime=18, difference=1, version=0):
+    def __init__(self, window=5, ltime=18, difference=1, version=0, root=None):
             '''
             Attributes:
                 data : torch.Tensor
@@ -217,12 +223,12 @@ class final_dataset(data.Dataset):
             self.window = window
             # tmppath = os.path.join(PROJECT_ROOT + DATA_DIR + "/tmp")
             self.difference = difference
-            self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference)
-            self.weather_data = weather_data(version=version)
+            self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=root+'/wind_energy_v2.csv')
+            self.weather_data = weather_data(version=version, root=root+'/history_cleaned/')
 
             self.first_idx = (2 + difference) * ltime
             # maximum index that has a target
-            self.last_idx = 5114 * 6 - 48 # min([a.data.shape[0] * 6 for a in self.weather_data.data ]) - 8
+            self.last_idx = FORECAST_ROW_NUM * FORECAST_TIME_INTERVAL - 48 # min([a.data.shape[0] * 6 for a in self.weather_data.data ]) - 8
 
     def collect_weather(self, idx):
         return self.weather_data.collect_forcast(idx)
@@ -262,7 +268,7 @@ class final_dataset(data.Dataset):
 
         return x,y
         
-def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, val_ratio=0.2, batch_size=16):
+def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, val_ratio=0.2, batch_size=16, root=None):
     '''
     Input:
         window
@@ -275,7 +281,10 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
         val_ratio = train/val split ratio (train/val is split from the training dataset constructed by the ratio of split_ratio)
         batch_size 
     '''
-    dataset = final_dataset(window, ltime, difference, version)
+    if root is not None:
+        dataset = final_dataset(window, ltime, difference, version, root)
+    else:
+        dataset = final_dataset(window, ltime, difference, version)
     dataset_size = len(dataset)
     
     indices = list(range(dataset_size))

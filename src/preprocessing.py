@@ -43,7 +43,7 @@ def change_representation(angles):
     '''
     angles = angles * np.pi / 180
     cos = torch.cos(angles).unsqueeze(1)
-    sin = torch.cos(angles).unsqueeze(1)
+    sin = torch.sin(angles).unsqueeze(1)
     return torch.cat([cos, sin], axis=1)
 
 
