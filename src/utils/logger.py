@@ -1,5 +1,8 @@
 import json
 from torch.utils.tensorboard import SummaryWriter
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
 
 class Logger(SummaryWriter):
     def __init__(self, trade_id, model_info=None, trade_info=None):
@@ -56,3 +59,20 @@ class Logger(SummaryWriter):
 
         with open(out_file_name, "w") as outfile:
             json.dump(self.trade_history, outfile, indent=4, sort_keys=False)
+
+
+
+    def draw_validation_result(self, val_y, pred_y, epoch):
+
+        fig = plt.figure(1, figsize=(15, 7))
+        plt.plot(val_y, color="blue")
+        plt.plot(pred_y, color="red")
+        plt.xlabel("time T", fontsize=20)
+        plt.ylabel("Energy", fontsize=20)
+        red_patch = mpatches.Patch(color="red", label="prediction")
+        blue_patch = mpatches.Patch(color="blue", label="Actual")
+        plt.legend(handles=[red_patch, blue_patch])
+
+        self.add_figure("Validation/Pred", fig, epoch)
+
+                                        

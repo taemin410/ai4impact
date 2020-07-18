@@ -354,7 +354,7 @@ def load_dataset(
     if root is not None:
         dataset = final_dataset(window, ltime, difference, version, root, 0)
     else:
-        dataset = final_dataset(window, ltime, difference, version, normalize)
+        dataset = final_dataset(window, ltime, difference, version, None, normalize)
     dataset_size = len(dataset)
 
     indices = list(range(dataset_size))
@@ -396,6 +396,7 @@ def load_dataset(
 
 
 if __name__ == "__main__":
+    pass
 #     dataset = final_dataset(difference=0, version=0)
 #     x, y = dataset[3]
 #     print(x, y)

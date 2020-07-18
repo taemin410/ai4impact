@@ -5,10 +5,6 @@ from torch.utils.data import dataloader
 from torch.optim.lr_scheduler import StepLR
 import math
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-
-
 class NN_Model(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_layers, writer):
         super().__init__()
@@ -42,10 +38,10 @@ class NN_Model(nn.Module):
         # Initialize loss function and optimizer
         criterion = torch.nn.MSELoss()  # mean-squared error for regression
         optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
         losses = []
         val_losses = []
-        scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
         # Train the model by epochs
         for epoch in range(epochs):
@@ -71,18 +67,8 @@ class NN_Model(nn.Module):
 
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
-
-                fig = plt.figure(1, figsize=(25, 10))
-                plt.plot(valY, color="blue")
-                plt.plot(outputs, color="red")
-                plt.xlabel("time T", fontsize=20)
-                plt.ylabel("Energy", fontsize=20)
-                red_patch = mpatches.Patch(color="red", label="prediction")
-                blue_patch = mpatches.Patch(color="blue", label="Actual")
-                plt.legend(handles=[red_patch, blue_patch])
-
-                self.writer.add_figure("Validation/Pred", fig, epoch)
-
+                self.writer.draw_validation_result(valY, outputs, epoch)
+                
             self.writer.add_scalar("Loss/train", loss_sum / len(trainloader), epoch)
             self.writer.add_scalar("Loss/validation", val_loss, epoch)
             

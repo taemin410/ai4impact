@@ -23,9 +23,12 @@ def main(args):
     configs = load_config("config.yml")
     modelConfig = configs["model"]
 
+    time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    logdir = "runs/" + time
+    
     # Initialize SummaryWriter for tensorboard
-    writer = Logger(datetime.now())
-
+    writer = Logger(logdir)
+    write_configs(writer, modelConfig)
     # Initialize SummaryWriter for tensorboard
     # writer = SummaryWriter(logdir)
     # write_configs(writer, modelConfig)
@@ -37,7 +40,7 @@ def main(args):
 
     # initialize Model
     model = NN_Model(
-        input_dim=299,
+        input_dim=train_loader.dataset.tensors[0].size(1),
         output_dim=1,
         hidden_layers=modelConfig["hiddenlayers"],
         writer=writer,
