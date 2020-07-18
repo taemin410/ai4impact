@@ -22,7 +22,6 @@ FORECAST_TIME_INTERVAL = 6
 # FORECAST_ROW_NUM = 166
 # FORECAST_TIME_INTERVAL = 6
 
-
 def normalize(data):
     if data.dim() == 1:
         return (data - torch.mean(data))/ torch.std(data)
@@ -226,7 +225,7 @@ class final_dataset(data.Dataset):
             '''
             self.lead_time = ltime
             self.window = window
-            # tmppath = os.path.join(PROJECT_ROOT + DATA_DIR + "/tmp")
+
             self.difference = difference
             self.normalize = normalize
             if root != None:
@@ -307,6 +306,15 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
     train_dataset = dataset[train_indices]
     val_dataset = dataset[val_indices]
     test_dataset = dataset[test_indices]
+    train_dataset = torch.utils.data.TensorDataset(
+            train_dataset[0].clone().detach() , train_dataset[1].clone().detach()
+        )
+    val_dataset = torch.utils.data.TensorDataset(
+            val_dataset[0].clone().detach() , val_dataset[1].clone().detach()
+        )
+    test_dataset = torch.utils.data.TensorDataset(
+            test_dataset[0].clone().detach() , test_dataset[1].clone().detach()
+        )
     # Creating data samplers
     train_sampler = SequentialSampler(train_dataset)
     valid_sampler = SequentialSampler(val_dataset)
@@ -327,4 +335,3 @@ if __name__ == "__main__":
     print(x, y)
     # train,val,test = load_dataset()
     
-    # print(dataset[:1])
