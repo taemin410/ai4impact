@@ -5,19 +5,22 @@ import datetime
 from datetime import datetime as dt
 import numpy as np
 import sys,os
-# sys.path.insert(0,os.path.abspath(os.path.join('..')))
 # from .preprocessing import *
-from src.preprocessing import *
-
+print(sys.path)
+if '/src' in sys.path[0]:
+    from preprocessing import *
+else:
+    from src.preprocessing import *
 from pdb_clone import pdb
+sys.path.insert(0,os.path.abspath(os.path.join('..')))
 
 from settings import PROJECT_ROOT, DATA_DIR
 from torch.utils.data import SequentialSampler
 
-# FORECAST_ROW_NUM = 5137
-# FORECAST_TIME_INTERVAL = 6
-FORECAST_ROW_NUM = 166
+FORECAST_ROW_NUM = 5137
 FORECAST_TIME_INTERVAL = 6
+# FORECAST_ROW_NUM = 166
+# FORECAST_TIME_INTERVAL = 6
 
 
 def normalize(data):
@@ -30,8 +33,9 @@ def normalize(data):
 
 
 class weather_data(data.Dataset):
-    def __init__(self, root=PROJECT_ROOT + DATA_DIR + "/history_cleaned/",version=0,time_interval=6):
+    def __init__(self, root=PROJECT_ROOT + DATA_DIR + "/history_cleaned/",version=0,time_interval=6,normalize=1):
         self.weather_dirs_ = [root + str(dir_) for dir_ in os.listdir(root)]
+        self.normalize = normalize
         self.data, self.time_frame = self.load_data(self.weather_dirs_,version)
         self.time_interval = time_interval
         self.version = version
@@ -69,8 +73,8 @@ class weather_data(data.Dataset):
             speed_direction_np = tmp[:,2:].astype(np.float64)
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed 
-            # speed_direction[:,0] = normalize(speed_direction[:,0])
-            # TODO: Angle represetnation change
+            if self.normalize:
+                speed_direction[:,0] = normalize(speed_direction[:,0])
             speed_direction = torch.cat([speed_direction[:,0].unsqueeze(1),change_representation(speed_direction[:,1])],axis=1)
             assert speed_direction.shape[1] == 3
             
@@ -109,7 +113,7 @@ class wind_data_v2(data.Dataset):
     '''
     difference between v1 v2 is that preprocessing happens inside the class
     '''
-    def __init__(self, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv"):
+    def __init__(self, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=1):
         '''
         Attributes:
             data : torch.Tensor
@@ -118,12 +122,13 @@ class wind_data_v2(data.Dataset):
         self.wind_dir = wind_dir
         self.lead_time = ltime
         self.window = window
+        self.normalize = normalize        
+
         self.data, self.time_frame, self.raw = self.load_data(wind_dir)
         if difference == 1: 
             self.data, self.time_frame, self.raw= self.to_difference()
         self.first_idx = (2 + difference) * ltime
         self.last_idx = FORECAST_ROW_NUM * FORECAST_TIME_INTERVAL - 48
-        
     def __getitem__(self,idx):
         if isinstance(idx,int):
             idx = slice(idx , idx+1, 1)
@@ -149,18 +154,17 @@ class wind_data_v2(data.Dataset):
         time_features = extract_time_feature(self.time_frame[idx]) 
         m,f = difference_orders(self.data[idx2], ltime)
         window_data = self.collect_window(self.data[idx3], idx3)
-        # TODO:
-        # window_avg, window_std = self.window_stats(window_data)
+        window_avg, window_std = self.window_stats(window_data)
         y = self.data[idx4]
-        formatted_x = torch.cat([window_data, m, f, time_features], axis=1)
+        formatted_x = torch.cat([window_data, m, f, time_features, window_avg, window_std], axis=1)
 
         assert formatted_x.shape[0] == y.shape[0]
         # window column + difference orders +  time features(month, time) of frame T+0 
-        assert formatted_x.shape[1] == (self.window + 2 + 36)
+        assert formatted_x.shape[1] == (self.window + 2 + 36 + 2)
 
         return formatted_x, y 
     def window_stats(self, data):
-        pass
+        return torch.mean(data,axis=1).unsqueeze(1), torch.std(data,axis=1).unsqueeze(1) 
 
     def load_data(self,dirs_):
 
@@ -172,7 +176,8 @@ class wind_data_v2(data.Dataset):
         energy = torch.Tensor(energy_np)
         raw = energy.clone()
         # normalize energy generated
-        # energy = normalize(energy)
+        if self.normalize == 1:
+            energy = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
@@ -209,7 +214,7 @@ class wind_data_v2(data.Dataset):
 
 
 class final_dataset(data.Dataset):
-    def __init__(self, window=5, ltime=18, difference=1, version=0, root=None):
+    def __init__(self, window=5, ltime=18, difference=1, version=0, root=None, normalize=1):
             '''
             Attributes:
                 data : torch.Tensor
@@ -223,9 +228,13 @@ class final_dataset(data.Dataset):
             self.window = window
             # tmppath = os.path.join(PROJECT_ROOT + DATA_DIR + "/tmp")
             self.difference = difference
-            self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=root+'/wind_energy_v2.csv')
-            self.weather_data = weather_data(version=version, root=root+'/history_cleaned/')
-
+            self.normalize = normalize
+            if root != None:
+                self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=root+'/wind_energy_v2.csv',normalize=0)
+                self.weather_data = weather_data(version=version, root=root+'/history_cleaned/',normalize=0)
+            else:
+                self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=normalize)
+                self.weather_data = weather_data(version=version, root=PROJECT_ROOT + DATA_DIR + "/history_cleaned/",normalize=normalize)
             self.first_idx = (2 + difference) * ltime
             # maximum index that has a target
             self.last_idx = FORECAST_ROW_NUM * FORECAST_TIME_INTERVAL - 48 # min([a.data.shape[0] * 6 for a in self.weather_data.data ]) - 8
@@ -268,7 +277,7 @@ class final_dataset(data.Dataset):
 
         return x,y
         
-def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, val_ratio=0.2, batch_size=16, root=None):
+def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, val_ratio=0.2, batch_size=16, root=None,normalize=1):
     '''
     Input:
         window
@@ -282,9 +291,9 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
         batch_size 
     '''
     if root is not None:
-        dataset = final_dataset(window, ltime, difference, version, root)
+        dataset = final_dataset(window, ltime, difference, version, root,0)
     else:
-        dataset = final_dataset(window, ltime, difference, version)
+        dataset = final_dataset(window, ltime, difference, version,normalize)
     dataset_size = len(dataset)
     
     indices = list(range(dataset_size))
