@@ -17,12 +17,14 @@ def test_data(test, expected_output):
         loaded = dataset[idx]
         print(loaded[0].dtype, expected_output[0])
         print("Dataset's value\n\n",loaded[0] ,'\n\nGround Truth\n\n',expected_output[0])
-        print(loaded[0] == expected_output[0] , loaded[1] == expected_output[1])
-        false_idx = (1 - loaded[0] == expected_output[0].int()).nonzero()
+        print(torch.eq(loaded[0], expected_output[0]))
+        # print((loaded[0] - expected_output[0]) == 0 , loaded[1] == expected_output[1])
+        # false_idx = (1 - loaded[0] == expected_output[0].int()).nonzero()
         # assert dataset[idx][0] == expected_output[0] and dataset[idx][1] == expected_output[1] 
     else:
-        print("Dataset's value\n\n",dataset[idx[0] : idx[1]][0] ,'\n\nGround Truth\n\n',expected_output[0])
-        print(dataset[idx[0] : idx[1]][0] == expected_output[0], dataset[idx[0] : idx[1]][1] == expected_output[1])
+        pass
+        # print("Dataset's value\n\n",dataset[idx[0] : idx[1]][0] ,'\n\nGround Truth\n\n',expected_output[0])
+        # print(dataset[idx[0] : idx[1]][0] == expected_output[0], dataset[idx[0] : idx[1]][1] == expected_output[1])
         # assert dataset[idx[0] : idx[1]][0] == expected_output[0] and dataset[idx[0] : idx[1]][1] == expected_output[1] 
 
 ltime = 10
