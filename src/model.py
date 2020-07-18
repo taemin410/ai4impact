@@ -27,11 +27,13 @@ class NN_Model(nn.Module):
         print(self.layers)
 
     def forward(self, x):
+        x0 = x[:,4].clone().unsqueeze(1)
+
         for layer in self.layers[:-1]:
             x = F.relu(layer(x))
         out = self.layers[-1](x)
 
-        return out
+        return out + x0
 
     def train(self, trainloader, validationloader, epochs=10, lr=0.01):
 

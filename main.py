@@ -35,6 +35,7 @@ def main(args):
   
     # Preprocess the data
     train_loader, validation_loader, test_loader, data_mean, data_std = load_dataset(
+        difference=0,
         batch_size=modelConfig["batchsize"]
     )
 
