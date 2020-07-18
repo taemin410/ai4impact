@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.data import dataloader
+from torch.optim.lr_scheduler import StepLR
 import math
 
 import matplotlib.pyplot as plt
@@ -44,6 +45,7 @@ class NN_Model(nn.Module):
 
         losses = []
         val_losses = []
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
         # Train the model by epochs
         for epoch in range(epochs):
@@ -81,12 +83,10 @@ class NN_Model(nn.Module):
 
                 self.writer.add_figure("Validation/Pred", fig, epoch)
 
-            print(
-                "DEBUG: train_loss/%.5f | val_loss/%.5f"
-                % (loss_sum / len(trainloader), val_loss)
-            )
             self.writer.add_scalar("Loss/train", loss_sum / len(trainloader), epoch)
             self.writer.add_scalar("Loss/validation", val_loss, epoch)
+            
+            scheduler.step()
 
             if epoch % 1 == 0:
                 print(
@@ -105,16 +105,12 @@ class NN_Model(nn.Module):
         result = (testY - ypred) ** 2  # squared error
 
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
-
-        print("ypred", ypred[:10])
-        print("ytrue", testY[:10])
-
         for i in range(list(testY.size())[0]):
             self.writer.add_scalars(
                 "test/pred", {"ypred": ypred[i], "ytrue": testY[i],}, i
             )
 
-        return (rmse, ypred)
+        return (rmse, ypred, testY)
 
 
 class Persistance(nn.Module):
