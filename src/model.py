@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.data import dataloader
+from torch.optim.lr_scheduler import StepLR
 import math
 
 class NN_Model(nn.Module):
@@ -40,6 +41,7 @@ class NN_Model(nn.Module):
 
         losses = []
         val_losses = []
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
         # Train the model by epochs
         for epoch in range(epochs):
@@ -66,6 +68,7 @@ class NN_Model(nn.Module):
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
             
+            scheduler.step()
 
             self.writer.add_scalar("loss", loss_sum / len(trainloader), epoch)
             self.writer.add_scalar("val_loss", val_loss, epoch)

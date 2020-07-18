@@ -26,10 +26,10 @@ def main(args):
     writer = Logger(datetime.now())
 
     # Initialize SummaryWriter for tensorboard
-    writer = SummaryWriter(logdir)
-    write_configs(writer, modelConfig)
+    # writer = SummaryWriter(logdir)
+    # write_configs(writer, modelConfig)
     # Preprocess the data
-    train_loader, validation_loader, test_loader = load_dataset(batch_size=modelConfig["batchsize"])
+    train_loader, validation_loader, test_loader, data_mean, data_std = load_dataset(batch_size=modelConfig["batchsize"])
         
     # initialize Model
     model = NN_Model(
@@ -39,11 +39,17 @@ def main(args):
     model.train(train_loader, validation_loader, epochs=modelConfig["epochs"], lr=modelConfig["lr"])
 
     rmse, ypred, ytest = model.test(test_loader)
+
     print("RMSE:  ", rmse)
     
     writer.add_text("RMSE", str(rmse.item()), 0)
 
-    trade_env = Trader(ytest.tolist(), ypred.tolist(), writer, 18)
+    y_test_unnormalized = (ytest * data_std) + data_mean
+    y_pred_unnormalized = (ypred * data_std) + data_mean
+
+    print(y_test_unnormalized, y_pred_unnormalized)
+
+    trade_env = Trader(y_test_unnormalized.tolist(), y_pred_unnormalized.tolist(), writer, 18)
     trade_env.trade()
     result = trade_env.pay_back()
     print (result)

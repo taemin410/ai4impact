@@ -3,7 +3,7 @@ model:
     mode: train
     lr: 0.0001
     batchsize: 16
-    epochs: 40
+    epochs: 50
 
     decay: 0.01
     
