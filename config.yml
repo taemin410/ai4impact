@@ -1,9 +1,9 @@
 model:
-    hiddenlayers: [200,128,64,32]
+    hiddenlayers: [512,256,128,64]
     mode: train
-    lr: 0.001
-    batchsize: 16
-    epochs: 20
+    lr: 0.00001
+    batchsize: 8
+    epochs: 500
 
     decay: 0.01
     

@@ -9,11 +9,13 @@ import argparse
 import torch
 from datetime import datetime
 
+
 def write_configs(writer, configs):
-    configstr=""
+    configstr = ""
     for i in configs:
-        configstr+= str(i)+" : "+ str(configs[i]) + "\n"
+        configstr += str(i) + " : " + str(configs[i]) + "\n"
     writer.add_text("CONFIGS", configstr, 0)
+
 
 def main(args):
 
@@ -28,18 +30,28 @@ def main(args):
     writer = SummaryWriter(logdir)
     write_configs(writer, modelConfig)
     # Preprocess the data
-    train_loader, validation_loader, test_loader = load_dataset(batch_size=modelConfig["batchsize"])
-        
-    # initialize Model
-    model = NN_Model(
-        input_dim=299, output_dim=1, hidden_layers=modelConfig["hiddenlayers"], writer=writer
+    train_loader, validation_loader, test_loader = load_dataset(
+        batch_size=modelConfig["batchsize"]
     )
 
-    model.train(train_loader, validation_loader, epochs=modelConfig["epochs"], lr=modelConfig["lr"])
+    # initialize Model
+    model = NN_Model(
+        input_dim=299,
+        output_dim=1,
+        hidden_layers=modelConfig["hiddenlayers"],
+        writer=writer,
+    )
+
+    model.train(
+        train_loader,
+        validation_loader,
+        epochs=modelConfig["epochs"],
+        lr=modelConfig["lr"],
+    )
 
     rmse, ypred = model.test(test_loader)
     print("RMSE:  ", rmse)
-    
+
     writer.add_text("RMSE", str(rmse.item()), 0)
 
     writer.close()
@@ -63,4 +75,3 @@ if __name__ == "__main__":
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     globals()[args.mode](args)
-        

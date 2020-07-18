@@ -4,6 +4,10 @@ from torch.nn import functional as F
 from torch.utils.data import dataloader
 import math
 
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
+
 class NN_Model(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_layers, writer):
         super().__init__()
@@ -22,7 +26,7 @@ class NN_Model(nn.Module):
             current_input_dim = hidden_dim
         # add the last layer
         self.layers.append(nn.Linear(current_input_dim, self.output_dim))
-        
+
         print(self.layers)
 
     def forward(self, x):
@@ -51,32 +55,49 @@ class NN_Model(nn.Module):
                 outputs = self(xx)
 
                 outputs = outputs.squeeze(1)
-                
+
                 # obtain the loss function
                 # TODO: Add tensorboard write
                 loss = criterion(outputs, yy)
-                loss_sum += loss.item()  
+                loss_sum += loss.item()
                 loss.backward()
                 optimizer.step()
-            
+
             with torch.no_grad():
                 valX = validationloader.dataset.tensors[0]
                 valY = validationloader.dataset.tensors[1]
 
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
-            
 
-            self.writer.add_scalar("Loss/train", loss_sum/len(trainloader), epoch)
+                fig = plt.figure(1, figsize=(25, 10))
+                plt.plot(valY, color="blue")
+                plt.plot(outputs, color="red")
+                plt.xlabel("time T", fontsize=20)
+                plt.ylabel("Energy", fontsize=20)
+                red_patch = mpatches.Patch(color="red", label="prediction")
+                blue_patch = mpatches.Patch(color="blue", label="Actual")
+                plt.legend(handles=[red_patch, blue_patch])
+
+                self.writer.add_figure("Validation/Pred", fig, epoch)
+
+            print(
+                "DEBUG: train_loss/%.5f | val_loss/%.5f"
+                % (loss_sum / len(trainloader), val_loss)
+            )
+            self.writer.add_scalar("Loss/train", loss_sum / len(trainloader), epoch)
             self.writer.add_scalar("Loss/validation", val_loss, epoch)
 
             if epoch % 1 == 0:
-                print("Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f" % (epoch, loss.item(), loss_sum))
+                print(
+                    "Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f"
+                    % (epoch, loss.item(), loss_sum)
+                )
 
         print("---train finished---")
-        
+
     def test(self, test_loader):
-        
+
         testX = test_loader.dataset.tensors[0]
         testY = test_loader.dataset.tensors[1]
 
@@ -84,21 +105,19 @@ class NN_Model(nn.Module):
         result = (testY - ypred) ** 2  # squared error
 
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
-        
+
         print("ypred", ypred[:10])
         print("ytrue", testY[:10])
-        
+
         for i in range(list(testY.size())[0]):
-            self.writer.add_scalars("test/pred", {
-                'ypred': ypred[i],
-                'ytrue': testY[i],
-            }, i)
+            self.writer.add_scalars(
+                "test/pred", {"ypred": ypred[i], "ytrue": testY[i],}, i
+            )
 
         return (rmse, ypred)
 
 
 class Persistance(nn.Module):
-
     def __init(self, delay):
         super().init()
         self.delay = delay
@@ -106,5 +125,4 @@ class Persistance(nn.Module):
     def forward(self, x):
         if self.delay == 0:
             return x
-        return x[:,-self.delay]
-
+        return x[:, -self.delay]
