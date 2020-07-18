@@ -8,7 +8,13 @@ from src.utils.logger import Logger
 from datetime import datetime
 import argparse
 import torch
+from datetime import datetime
 
+def write_configs(writer, configs):
+    configstr=""
+    for i in configs:
+        configstr+= str(i)+" : "+ str(configs[i]) + "\n"
+    writer.add_text("CONFIGS", configstr, 0)
 
 def main(args):
 
@@ -19,6 +25,9 @@ def main(args):
     # Initialize SummaryWriter for tensorboard
     writer = Logger(datetime.now())
 
+    # Initialize SummaryWriter for tensorboard
+    writer = SummaryWriter(logdir)
+    write_configs(writer, modelConfig)
     # Preprocess the data
     train_loader, validation_loader, test_loader = load_dataset(batch_size=modelConfig["batchsize"])
         
@@ -31,6 +40,8 @@ def main(args):
 
     rmse, ypred, ytest = model.test(test_loader)
     print("RMSE:  ", rmse)
+    
+    writer.add_text("RMSE", str(rmse.item()), 0)
 
     trade_env = Trader(ytest.tolist(), ypred.tolist(), writer, 18)
     trade_env.trade()
