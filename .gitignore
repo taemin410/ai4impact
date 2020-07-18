@@ -4,3 +4,8 @@
 __pycache__/
 *.pyc 
 
+# ctag
+tags
+*.swp
+
+runs/
