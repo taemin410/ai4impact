@@ -66,7 +66,7 @@ class NN_Model(nn.Module):
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
 
-            self.writer.add_scalar("loss", loss_sum, epoch)
+            self.writer.add_scalar("loss", loss_sum / len(trainloader), epoch)
             self.writer.add_scalar("val_loss", val_loss, epoch)
 
             if epoch % 1 == 0:
@@ -90,7 +90,7 @@ class NN_Model(nn.Module):
                 'ytrue': testY[i],
             }, i)
 
-        return (rmse, ypred)
+        return (rmse, ypred, testY)
 
 
 class Persistance(nn.Module):

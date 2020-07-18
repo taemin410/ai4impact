@@ -1,8 +1,9 @@
 import json
 from torch.utils.tensorboard import SummaryWriter
 
-class logger(SummaryWriter):
+class Logger(SummaryWriter):
     def __init__(self, trade_id, model_info=None, trade_info=None):
+        super().__init__()
         self.trade_id = trade_id
         self.model_info = model_info
         self.trade_info = trade_info
@@ -34,6 +35,7 @@ class logger(SummaryWriter):
             "current_cash_at_hand": cash_at_hand,
         }
         self.trade_history.append(trade_data)
+        self.add_scalar("cash_at_hand", cash_at_hand, trade_num)
 
     def log_trade_history(self) -> None:
         """
