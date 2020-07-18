@@ -15,26 +15,26 @@ class Trader():
         self.writer = writer
 
         self.lead_time = lead_time
-        self._cash_at_hand = IINITIAL_CASH_OFFERINGS 
-        self._real_data = real_data 
+        self._cash_at_hand = IINITIAL_CASH_OFFERINGS
+        self._real_data = real_data
         self._forecast_data = forecast_data
-        
-    
+
     def trade(self) -> float:
         """
             Deals with different trade scenario based on forecast and real value.
         """
         for i, (real_val, predict_val) in enumerate(zip(self._real_data, self._forecast_data)):
+
             if i < self.lead_time:  # warm-up
                 continue
-            
+
             trade_type, diff, lost_val = self._initialize_trade()
 
-            if predict_val < real_val: # excess
+            if predict_val < real_val:  # excess
                 trade_type = EXCESS_TRADE
                 diff, lost_val = self._manage_excess(real_val, predict_val)
 
-            elif predict_val > real_val:   # shortfall
+            elif predict_val > real_val:  # shortfall
                 trade_type = SHORTFALL_TRADE
                 diff, lost_val = self._manage_shortfall(real_val, predict_val)
 
@@ -69,21 +69,18 @@ class Trader():
         shortfall_money = shortfall_energy * BUY_PRICE
         cost = 0
 
-        if shortfall_money > self._cash_at_hand:    # charge fine
+        if shortfall_money > self._cash_at_hand:  # charge fine
 
-            if self._cash_at_hand <= 0: # no money at hand to pay for the shortfall
+            if self._cash_at_hand <= 0:  # no money at hand to pay for the shortfall
                 cost += shortfall_energy * FINE
 
-            else:   # some of the shortfall payable by the cash at hand 
+            else:  # some of the shortfall payable by the cash at hand
                 non_payable_shortfall = shortfall_money - self._cash_at_hand
                 payable_shortfall = shortfall_money - non_payable_shortfall
                 cost += (non_payable_shortfall / BUY_PRICE * FINE) + payable_shortfall
-                
-        else:   # no fine, but pay for the shortfall
+
+        else:  # no fine, but pay for the shortfall
             cost += shortfall_money
 
         self._cash_at_hand -= cost
         return shortfall_energy, cost
-
-        
-

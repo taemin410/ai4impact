@@ -29,10 +29,12 @@ def main(args):
     # Initialize SummaryWriter for tensorboard
     # writer = SummaryWriter(logdir)
     # write_configs(writer, modelConfig)
+  
     # Preprocess the data
     train_loader, validation_loader, test_loader, data_mean, data_std = load_dataset(
         batch_size=modelConfig["batchsize"]
     )
+
     # initialize Model
     model = NN_Model(
         input_dim=299,
