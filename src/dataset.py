@@ -21,18 +21,14 @@ from torch.utils.data import SequentialSampler
 
 FORECAST_ROW_NUM = 5137
 FORECAST_TIME_INTERVAL = 6
-# FORECAST_ROW_NUM = 166
-# FORECAST_TIME_INTERVAL = 6
-
 
 def normalize(data):
     if data.dim() == 1:
-        return (data - torch.mean(data)) / torch.std(data)
+        return (data - torch.mean(data))/ torch.std(data), torch.mean(data), torch.std(data)
     else:
-        mean = torch.mean(data, axis=1).unsqueeze(1).repeat(1, data.shape[1])
-        std = torch.std(data, axis=1).unsqueeze(1).repeat(1, data.shape[1])
-        return (data - mean) / std
-
+        mean = torch.mean(data, axis=1).unsqueeze(1).repeat(1,data.shape[1])
+        std = torch.std(data, axis=1).unsqueeze(1).repeat(1,data.shape[1])
+        return  (data - mean) / std
 
 class weather_data(data.Dataset):
     def __init__(
@@ -83,7 +79,7 @@ class weather_data(data.Dataset):
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed
             if self.normalize:
-                speed_direction[:, 0] = normalize(speed_direction[:, 0])
+                speed_direction[:, 0], self.x_mean, self.x_std = normalize(speed_direction[:, 0])
             speed_direction = torch.cat(
                 [
                     speed_direction[:, 0].unsqueeze(1),
@@ -210,7 +206,7 @@ class wind_data_v2(data.Dataset):
         raw = energy.clone()
         # normalize energy generated
         if self.normalize == 1:
-            energy = normalize(energy)
+            energy, self.x_mean, self.x_std = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
@@ -358,7 +354,7 @@ def load_dataset(
     if root is not None:
         dataset = final_dataset(window, ltime, difference, version, root, 0)
     else:
-        dataset = final_dataset(window, ltime, difference, version, normalize)
+        dataset = final_dataset(window, ltime, difference, version, None, normalize)
     dataset_size = len(dataset)
 
     indices = list(range(dataset_size))
@@ -396,11 +392,13 @@ def load_dataset(
         test_dataset, batch_size=batch_size, sampler=test_sampler
     )
 
-    return train_loader, validation_loader, test_loader
+    return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std
 
 
 if __name__ == "__main__":
-    dataset = final_dataset(difference=0, version=0)
-    x, y = dataset[3]
-    print(x, y)
+    pass
+#     dataset = final_dataset(difference=0, version=0)
+#     x, y = dataset[3]
+#     print(x, y)
     # train,val,test = load_dataset()
+

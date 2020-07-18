@@ -1,5 +1,3 @@
-from datetime import datetime
-from src.utils.logger import logger
 
 EXCESS_TRADE = "excess"
 SHORTFALL_TRADE = "shortfall"
@@ -10,10 +8,11 @@ SELL_PRICE = 10
 BUY_PRICE = 20
 FINE = 100
 
-
-class trader:
-    def __init__(self, real_data, forecast_data, lead_time=18):
+class Trader():
+    def __init__(self, real_data, forecast_data, writer, lead_time=18, ):
         assert len(real_data) == len(forecast_data)
+
+        self.writer = writer
 
         self.lead_time = lead_time
         self._cash_at_hand = IINITIAL_CASH_OFFERINGS
@@ -24,11 +23,8 @@ class trader:
         """
             Deals with different trade scenario based on forecast and real value.
         """
-        logger_ = logger(datetime.now())
+        for i, (real_val, predict_val) in enumerate(zip(self._real_data, self._forecast_data)):
 
-        for i, (real_val, predict_val) in enumerate(
-            zip(self._real_data, self._forecast_data)
-        ):
             if i < self.lead_time:  # warm-up
                 continue
 
@@ -44,11 +40,9 @@ class trader:
 
             self._sell(predict_val)
 
-            logger_.append_trade_data(
-                i, trade_type, real_val, predict_val, diff, lost_val, self._cash_at_hand
-            )
+            self.writer.append_trade_data(i, trade_type, real_val, predict_val, diff, lost_val, self._cash_at_hand)
 
-        logger_.log_trade_history()
+        self.writer.log_trade_history()
         return self._cash_at_hand
 
     def pay_back(self) -> float:

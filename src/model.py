@@ -2,11 +2,14 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.data import dataloader
-
+from torch.optim.lr_scheduler import StepLR
+import math
 
 class NN_Model(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_layers):
+    def __init__(self, input_dim, output_dim, hidden_layers, writer):
         super().__init__()
+
+        self.writer = writer
 
         # Store input and output dimensions to instance var
         self.input_dim = input_dim
@@ -30,11 +33,12 @@ class NN_Model(nn.Module):
 
         return out
 
-    def train(self, trainloader, validationloader, epochs=10, lr=0.01, writer=None):
+    def train(self, trainloader, validationloader, epochs=10, lr=0.01):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.MSELoss()  # mean-squared error for regression
         optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
         losses = []
         val_losses = []
@@ -53,18 +57,22 @@ class NN_Model(nn.Module):
                 # obtain the loss function
                 # TODO: Add tensorboard write
                 loss = criterion(outputs, yy)
-                loss_sum += loss.clone()
+                loss_sum += loss.item()
                 loss.backward()
                 optimizer.step()
 
-            # TODO: writer.add(losssum)
             with torch.no_grad():
                 valX = validationloader.dataset.tensors[0]
                 valY = validationloader.dataset.tensors[1]
 
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
-                # TODO: writer.add(val_loss)
+                self.writer.draw_validation_result(valY, outputs, epoch)
+                
+            self.writer.add_scalar("Loss/train", loss_sum / len(trainloader), epoch)
+            self.writer.add_scalar("Loss/validation", val_loss, epoch)
+            
+            scheduler.step()
 
             if epoch % 1 == 0:
                 print(
@@ -83,8 +91,12 @@ class NN_Model(nn.Module):
         result = (testY - ypred) ** 2  # squared error
 
         rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
+        for i in range(list(testY.size())[0]):
+            self.writer.add_scalars(
+                "test/pred", {"ypred": ypred[i], "ytrue": testY[i],}, i
+            )
 
-        return (rmse, ypred)
+        return (rmse, ypred, testY)
 
 
 class Persistance(nn.Module):

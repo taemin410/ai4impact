@@ -8,4 +8,10 @@ __pycache__/
 tags
 *.swp
 
+# Log
 runs/
+*.json
+
+# config
+*.yml
+
