@@ -21,7 +21,7 @@ def main(args):
 
     # Preprocess the data
     train_loader, validation_loader, test_loader = load_dataset(batch_size=16)
-        
+
     # initialize Model
     model = NN_Model(
         input_dim=299, output_dim=1, hidden_layers=modelConfig["hiddenlayers"]
@@ -51,4 +51,3 @@ if __name__ == "__main__":
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     globals()[args.mode](args)
-        

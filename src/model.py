@@ -20,7 +20,7 @@ class NN_Model(nn.Module):
             current_input_dim = hidden_dim
         # add the last layer
         self.layers.append(nn.Linear(current_input_dim, self.output_dim))
-        
+
         print(self.layers)
 
     def forward(self, x):
@@ -49,30 +49,33 @@ class NN_Model(nn.Module):
                 outputs = self(xx)
 
                 outputs = outputs.squeeze(1)
-                
+
                 # obtain the loss function
                 # TODO: Add tensorboard write
                 loss = criterion(outputs, yy)
                 loss_sum += loss.clone()
                 loss.backward()
                 optimizer.step()
-            
-            #TODO: writer.add(losssum)
+
+            # TODO: writer.add(losssum)
             with torch.no_grad():
                 valX = validationloader.dataset.tensors[0]
                 valY = validationloader.dataset.tensors[1]
 
                 outputs = self(valX).squeeze(1)
                 val_loss = criterion(outputs, valY)
-                #TODO: writer.add(val_loss)
+                # TODO: writer.add(val_loss)
 
             if epoch % 1 == 0:
-                print("Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f" % (epoch, loss.item(), loss_sum))
+                print(
+                    "Epoch: %d, batch loss: %1.5f Loss Sum: %1.5f"
+                    % (epoch, loss.item(), loss_sum)
+                )
 
         print("---train finished---")
-        
+
     def test(self, test_loader):
-        
+
         testX = test_loader.dataset.tensors[0]
         testY = test_loader.dataset.tensors[1]
 
@@ -85,7 +88,6 @@ class NN_Model(nn.Module):
 
 
 class Persistance(nn.Module):
-
     def __init(self, delay):
         super().init()
         self.delay = delay
@@ -93,5 +95,4 @@ class Persistance(nn.Module):
     def forward(self, x):
         if self.delay == 0:
             return x
-        return x[:,-self.delay]
-
+        return x[:, -self.delay]
