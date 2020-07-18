@@ -25,7 +25,7 @@ FORECAST_TIME_INTERVAL = 6
 
 def normalize(data):
     if data.dim() == 1:
-        return (data - torch.mean(data))/ torch.std(data)
+        return (data - torch.mean(data))/ torch.std(data), torch.mean(data), torch.std(data) 
     else:
         mean = torch.mean(data, axis=1).unsqueeze(1).repeat(1,data.shape[1])
         std = torch.std(data, axis=1).unsqueeze(1).repeat(1,data.shape[1])
@@ -74,7 +74,7 @@ class weather_data(data.Dataset):
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed 
             if self.normalize:
-                speed_direction[:,0] = normalize(speed_direction[:,0])
+                speed_direction[:,0], self.x_mean, self.x_std = normalize(speed_direction[:,0])
             speed_direction = torch.cat([speed_direction[:,0].unsqueeze(1),change_representation(speed_direction[:,1])],axis=1)
             assert speed_direction.shape[1] == 3
             
@@ -177,7 +177,7 @@ class wind_data_v2(data.Dataset):
         raw = energy.clone()
         # normalize energy generated
         if self.normalize == 1:
-            energy = normalize(energy)
+            energy, self.x_mean, self.x_std = normalize(energy)
         return energy, time, raw
 
     def to_difference(self):
@@ -319,12 +319,13 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
                                                         sampler=test_sampler)
 
-    return train_loader, validation_loader, test_loader
+    return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std 
 
 if __name__ == "__main__":
     dataset = final_dataset(difference=0,version=0)
     x , y= dataset[3]
     print(x, y)
+    print(dataset.wind_data.x_mean,)
     # train,val,test = load_dataset()
     
     # print(dataset[:1])
