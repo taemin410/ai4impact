@@ -38,9 +38,6 @@ def main(args):
     # Initialize SummaryWriter for tensorboard
     writer = Logger(logdir)
     write_configs(writer, modelConfig)
-    # Initialize SummaryWriter for tensorboard
-    # writer = SummaryWriter(logdir)
-    # write_configs(writer, modelConfig)
   
     # Preprocess the data
     train_loader, validation_loader, test_loader, data_mean, data_std = load_dataset(
@@ -93,13 +90,6 @@ def main(args):
     print (result)
 
     writer.close()
-
-    # # Evaluation phase
-    # # output = model.eval()
-
-    # # log(output)
-
-    # # visualize(output)
 
 
 if __name__ == "__main__":
