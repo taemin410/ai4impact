@@ -5,6 +5,7 @@ from src.utils.config import load_config
 from src.model import NN_Model, Persistance
 from src.trade.trader import Trader
 from src.utils.logger import Logger
+from src.eval import get_lagged_correlation
 from script.download_data import download_data, parse_data
 from datetime import datetime
 import argparse
@@ -72,6 +73,14 @@ def main(args):
 
     writer.add_text("RMSE", str(rmse.item()), 0)
     writer.add_text("RMSE/Baseline", str(b_rmse.item()), 0)
+
+    ####################
+    # Lagged Corr      #
+    ####################
+    lagged_vals = get_lagged_correlation(ypred = ypred, 
+                                    ytrue = test_loader.dataset.tensors[1], 
+                                    num_delta= 36 )
+    writer.draw_lagged_correlation(lagged_vals)
 
     y_test_unnormalized = (ytest * data_std) + data_mean
     y_pred_unnormalized = (ypred * data_std) + data_mean
