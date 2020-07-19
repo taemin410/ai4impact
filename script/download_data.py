@@ -89,4 +89,5 @@ def generate_cleaned_paths(history_path):
     
 def tag_colnames(energy_csv_path, save_path):
     df = pd.read_csv(energy_csv_path, names=["time", "energy"])
+    df["time"] = df["time"].apply(lambda x: x+":00")
     df.to_csv(save_path)
