@@ -183,7 +183,7 @@ class wind_data_v2(data.Dataset):
 
         assert formatted_x.shape[0] == y.shape[0]
         # window column + difference orders +  time features(month, time) of frame T+0
-        assert formatted_x.shape[1] == (self.window + 2 + 36 + 2)
+        # assert formatted_x.shape[1] == (self.window + 2 + 36 + 2)
 
         return formatted_x, y
 

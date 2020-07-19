@@ -33,12 +33,12 @@ class Trader():
             if predict_val < real_val:  # excess
                 trade_type = EXCESS_TRADE
                 diff, lost_val = self._manage_excess(real_val, predict_val)
+                self._sell(predict_val)
 
             elif predict_val > real_val:  # shortfall
                 trade_type = SHORTFALL_TRADE
                 diff, lost_val = self._manage_shortfall(real_val, predict_val)
-
-            self._sell(predict_val)
+                self._sell(real_val)
 
             self.writer.append_trade_data(i, trade_type, real_val, predict_val, diff, lost_val, self._cash_at_hand)
 

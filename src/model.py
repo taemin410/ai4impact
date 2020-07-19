@@ -28,13 +28,13 @@ class NN_Model(nn.Module):
         self.layers.append(nn.Linear(current_input_dim, self.output_dim))
 
         # dropout
-        self.dropout1 = nn.Dropout(p=0.25)
+        self.dropout1 = nn.Dropout(p=0.1)
 
     def forward(self, x):
         # x = x.to(self.device)
         x0 = x[:,4].unsqueeze(1).clone()
         for layer in self.layers[:-1]:
-            x = self.dropout1(F.tanh(layer(x)))
+            x = self.dropout1(F.relu(layer(x)))
         out = self.layers[-1](x)
 
         return out + x0
@@ -61,7 +61,7 @@ class NN_Model(nn.Module):
 
                 # obtain the loss function
                 # TODO: Add tensorboard write
-                loss =criterion(outputs, yy)
+                loss = self.log_cosh_loss_func(outputs, yy)
                 loss_sum += loss.item()
                 loss.backward()
                 optimizer.step()
@@ -73,7 +73,7 @@ class NN_Model(nn.Module):
                     # valY = valY.to(self.device)
 
                     outputs = self(valX).squeeze(1)
-                    val_loss = criterion(outputs, valY)
+                    val_loss = self.log_cosh_loss_func(outputs, valY)
                     val_loss_sum += val_loss
                     # self.writer.draw_validation_result(valY, outputs, epoch)
                 
@@ -122,6 +122,10 @@ class NN_Model(nn.Module):
                     loss += 0.5 * (diff ** 2)
         
         return loss / len(pred)
+
+    def log_cosh_loss_func(self, pred, target):
+        ey_t = pred - target
+        return torch.mean(torch.log(torch.cosh(ey_t)))
 
 
 class Persistance(nn.Module):
