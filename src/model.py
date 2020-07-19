@@ -28,13 +28,13 @@ class NN_Model(nn.Module):
         self.layers.append(nn.Linear(current_input_dim, self.output_dim))
 
         # dropout
-        self.dropout1 = nn.Dropout(p=0.1)
+        # self.dropout1 = nn.Dropout(p=0.1)
 
     def forward(self, x):
         # x = x.to(self.device)
         x0 = x[:,4].unsqueeze(1).clone()
         for layer in self.layers[:-1]:
-            x = self.dropout1(F.relu(layer(x)))
+            x = F.relu(layer(x))
         out = self.layers[-1](x)
 
         return out + x0
@@ -43,7 +43,7 @@ class NN_Model(nn.Module):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.SmoothL1Loss()  # mean-squared error for regression
-        optimizer = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=weight_decay)
+        optimizer = torch.optim.Adamax(self.parameters(), lr=lr, weight_decay=weight_decay)
         scheduler = StepLR(optimizer, step_size=step_size, gamma=gamma)
 
         # Train the model by epochs
