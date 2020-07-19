@@ -2,9 +2,11 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from src.dataset import final_dataset, load_dataset
 from src.utils.config import load_config
-from src.model import NN_Model
+from src.model import NN_Model, Persistance
 from src.trade.trader import Trader
 from src.utils.logger import Logger
+from src.eval import get_lagged_correlation
+from script.download_data import download_data, parse_data
 from datetime import datetime
 import argparse
 import torch
@@ -18,6 +20,13 @@ def write_configs(writer, configs):
 
 
 def main(args):
+    
+    if args.data:
+        paths = download_data()
+        for i in paths:
+            parse_data(i)
+        print("=============== Parsing dataset complete ===============")
+        exit()
 
     # Load configurations
     configs = load_config("config.yml")
@@ -29,16 +38,15 @@ def main(args):
     # Initialize SummaryWriter for tensorboard
     writer = Logger(logdir)
     write_configs(writer, modelConfig)
-    # Initialize SummaryWriter for tensorboard
-    # writer = SummaryWriter(logdir)
-    # write_configs(writer, modelConfig)
   
     # Preprocess the data
     train_loader, validation_loader, test_loader, data_mean, data_std = load_dataset(
         difference=0,
         batch_size=modelConfig["batchsize"]
     )
-
+    
+    # Baseline model
+    baseline_model = Persistance(18, writer)
     # initialize Model
     model = NN_Model(
         input_dim=train_loader.dataset.tensors[0].size(1),
@@ -54,11 +62,22 @@ def main(args):
         lr=modelConfig["lr"],
     )
 
+    b_rmse, b_ypred, b_ytest = baseline_model.test(test_loader)
     rmse, ypred, ytest = model.test(test_loader)
 
     print("RMSE:  ", rmse)
+    print("BASELINE: ", b_rmse) 
 
     writer.add_text("RMSE", str(rmse.item()), 0)
+    writer.add_text("RMSE/Baseline", str(b_rmse.item()), 0)
+
+    ####################
+    # Lagged Corr      #
+    ####################
+    lagged_vals = get_lagged_correlation(ypred = ypred, 
+                                    ytrue = test_loader.dataset.tensors[1], 
+                                    num_delta= 180 )
+    writer.draw_lagged_correlation(lagged_vals)
 
     y_test_unnormalized = (ytest * data_std) + data_mean
     y_pred_unnormalized = (ypred * data_std) + data_mean
@@ -72,20 +91,13 @@ def main(args):
 
     writer.close()
 
-    # # Evaluation phase
-    # # output = model.eval()
-
-    # # log(output)
-
-    # # visualize(output)
-
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="ai4impact project")
 
     parser.add_argument("--mode", type=str, default="main")
-
+    parser.add_argument("--data",  action='store_true')
     args = parser.parse_args()
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"

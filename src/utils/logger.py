@@ -76,3 +76,10 @@ class Logger(SummaryWriter):
         self.add_figure("Validation/Pred", fig, epoch)
 
                                         
+    def draw_lagged_correlation(self, vals):
+        fig = plt.figure(3, figsize=(15,10))
+        plt.plot(vals)
+        plt.xlabel('Delta',fontsize=15)
+        plt.ylabel('Correlation',fontsize=15)
+        plt.title('Lag Correlation - Our Model',fontsize=15)
+        self.add_figure("LaggedCorrelation", fig, 0)
