@@ -66,9 +66,12 @@ def download_data():
         download_from_url(url, savepath)
         save_paths.append(savepath)
 
-
+    energy_path = PROJECT_ROOT+"/data/energy-ile-de-france.csv"
     energy_link = "https://ai4impact.org/P003/historical/energy-ile-de-france.csv"
-    download_from_url(energy_link, PROJECT_ROOT+"/data/energy-ile-de-france.csv")
+    download_from_url(energy_link, energy_path)
+    
+    # tag col names for energy dataset and save to wind_energy_v2.csv
+    tag_colnames(energy_path, PROJECT_ROOT+"/data/wind_energy_v2.csv")
 
     print("=== DOWNLOADING FINISHED === ")
 
@@ -81,7 +84,9 @@ def parse_data(history_path):
     df["Time"] = df["Time"].apply(lambda x: dt.strptime(x, '%Y/%m/%d %H:%MUTC'))
     df.to_csv(save_path)
 
-
 def generate_cleaned_paths(history_path):
     return history_path.replace("/history/", "/history_cleaned/")
     
+def tag_colnames(energy_csv_path, save_path):
+    df = pd.read_csv(energy_csv_path, names=["time", "energy"])
+    df.to_csv(save_path)

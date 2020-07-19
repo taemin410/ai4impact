@@ -76,7 +76,7 @@ def main(args):
     ####################
     lagged_vals = get_lagged_correlation(ypred = ypred, 
                                     ytrue = test_loader.dataset.tensors[1], 
-                                    num_delta= 36 )
+                                    num_delta= 180 )
     writer.draw_lagged_correlation(lagged_vals)
 
     y_test_unnormalized = (ytest * data_std) + data_mean
