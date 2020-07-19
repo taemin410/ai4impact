@@ -45,6 +45,7 @@ def main(args):
         output_dim=1,
         hidden_layers=modelConfig["hiddenlayers"],
         writer=writer,
+        device=args.device
     )
 
     model.train(
@@ -52,6 +53,9 @@ def main(args):
         validation_loader,
         epochs=modelConfig["epochs"],
         lr=modelConfig["lr"],
+        step_size=modelConfig["step_size"],
+        gamma=modelConfig["gamma"],
+        weight_decay=modelConfig["weight_decay"]
     )
 
     rmse, ypred, ytest = model.test(test_loader)
@@ -63,21 +67,12 @@ def main(args):
     y_test_unnormalized = (ytest * data_std) + data_mean
     y_pred_unnormalized = (ypred * data_std) + data_mean
 
-    print(y_test_unnormalized, y_pred_unnormalized)
-
     trade_env = Trader(y_test_unnormalized.tolist(), y_pred_unnormalized.tolist(), writer, 18)
     trade_env.trade()
     result = trade_env.pay_back()
-    print (result)
+    print ("tota profit", result)
 
     writer.close()
-
-    # # Evaluation phase
-    # # output = model.eval()
-
-    # # log(output)
-
-    # # visualize(output)
 
 
 if __name__ == "__main__":
@@ -88,6 +83,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     globals()[args.mode](args)
