@@ -52,12 +52,12 @@ def forecast_imputation():
 
 def main(args):
     
-    paths = download_data()
-    for i in paths:
-        parse_data(i)
-    print("=============== Parsing dataset complete ===============")
+    # paths = download_data()
+    # for i in paths:
+    #     parse_data(i)
+    # print("=============== Parsing dataset complete ===============")
 
-    forecast_imputation()
+    # forecast_imputation()
 
     # Load configurations
     configs = load_config("config.yml")
@@ -98,7 +98,7 @@ def main(args):
     )
 
     ypred = model.predict(test_loader.dataset.tensors[0])
-    y_pred_unnormalized  = (ypred * data_std) + data_mean
+    y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
 
     # b_rmse, b_ypred, b_ytest = baseline_model.test(test_loader)
     # rmse, ypred, ytest = model.test(test_loader)
@@ -127,7 +127,7 @@ def main(args):
 
     writer.close()
     
-    print (y_pred_unnormalized)
+    print ("ypred: " , y_pred_unnormalized)
     return y_pred_unnormalized
 
 def run_submission_session():
@@ -135,6 +135,7 @@ def run_submission_session():
         pred_val = main(args)
         submit_answer(pred_val)
 
+        print("WAITING FOR ...", RESUBMISSION_TIME_INTERVAL , " seconds")
         time.sleep(RESUBMISSION_TIME_INTERVAL)
         print("TIME: ", datetime.now(), "Starting main()")
 
