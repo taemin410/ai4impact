@@ -40,7 +40,7 @@ class weather_data(data.Dataset):
         self.time_interval = time_interval
         self.version = version
         # self.last_idx = FORECAST_ROW_NUM 
-        self.last_idx = self.data.shape[0]
+        self.last_idx = min([region.shape[0] for region in self.data])
 
     def __getitem__(self,idx):
         if isinstance(idx,int):
@@ -113,7 +113,7 @@ class wind_data_v2(data.Dataset):
     '''
     difference between v1 v2 is that preprocessing happens inside the class
     '''
-    def __init__(self, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=1, last_idx=last_idx):
+    def __init__(self, last_idx, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=1):
         '''
         Attributes:
             data : torch.Tensor
