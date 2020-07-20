@@ -15,3 +15,5 @@ runs/
 # config
 *.yml
 
+#DATASET
+*.csv

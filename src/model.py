@@ -103,11 +103,27 @@ class NN_Model(nn.Module):
 
 
 class Persistance(nn.Module):
-    def __init(self, delay):
-        super().init()
+    def __init__(self, delay, writer):
+        super().__init__()
         self.delay = delay
-
+        self.writer = writer
     def forward(self, x):
         if self.delay == 0:
             return x
         return x[:, -self.delay]
+
+
+    def test(self, test_loader):
+        testX = test_loader.dataset.tensors[0]
+        testY = test_loader.dataset.tensors[1]
+        
+        ypred = self(testX)
+        result = (testY - ypred) ** 2  # squared error
+
+        rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
+        for i in range(list(testY.size())[0]):
+            self.writer.add_scalars(
+                "test/baseline", {"ypred": ypred[i], "ytrue": testY[i],}, i
+            )
+
+        return (rmse, ypred, testY)

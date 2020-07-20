@@ -291,7 +291,7 @@ class final_dataset(data.Dataset):
         self.first_idx = 2  * ltime
         # maximum index that has a target
         self.last_idx = last_idx
-        
+
     def collect_weather(self, idx):
         return self.weather_data.collect_forcast(idx)
 
@@ -322,7 +322,7 @@ class final_dataset(data.Dataset):
             end = self.last_idx
         idx = slice(start, end, idx.step)
         # print(idx)
-        print("Timeframe considered x(T+0) :", self.wind_data.time_frame[idx])
+        # print("Timeframe considered x(T+0) :", self.wind_data.time_frame[idx])
         wind_x, y = self.wind_data[idx]
 
         weather_x = self.collect_weather(idx)
