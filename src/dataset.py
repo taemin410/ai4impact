@@ -6,13 +6,13 @@ from datetime import datetime as dt
 import numpy as np
 import sys, os
 
-# from .preprocessing import *
+from .preprocessing import *
 print(sys.path)
 if "/src" in sys.path[0]:
     from preprocessing import *
-else:
-    from src.preprocessing import *
-from pdb_clone import pdb
+# else:
+#     from src.preprocessing import *
+# from pdb_clone import pdb
 
 sys.path.insert(0, os.path.abspath(os.path.join("..")))
 
@@ -185,7 +185,7 @@ class wind_data_v2(data.Dataset):
 
         assert formatted_x.shape[0] == y.shape[0]
         # window column + difference orders +  time features(month, time) of frame T+0
-        assert formatted_x.shape[1] == (self.window + 2 + 36 + 2)
+        # assert formatted_x.shape[1] == (self.window + 2 + 36 + 2)
 
         return formatted_x, y
 
@@ -332,7 +332,7 @@ class final_dataset(data.Dataset):
 
 
 def load_dataset(
-    window=5,
+    window=10,
     ltime=18,
     difference=1,
     version=0,
