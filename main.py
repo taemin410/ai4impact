@@ -7,13 +7,17 @@ from src.trade.trader import Trader
 from src.utils.logger import Logger
 from src.eval import get_lagged_correlation
 from script.download_data import download_data, parse_data
-from datetime import datetime
+
 from src.request.request import submit_answer
 import argparse
 import torch
 import threading
-import time
-from datetime import datetime
+from datetime import datetime as dt
+import datetime
+import os
+import pandas as pd
+import numpy as np 
+from settings import PROJECT_ROOT, DATA_DIR
 
 RESUBMISSION_TIME_INTERVAL = 600
 
@@ -23,6 +27,27 @@ def write_configs(writer, configs):
         configstr += str(i) + " : " + str(configs[i]) + "\n"
     writer.add_text("CONFIGS", configstr, 0)
 
+def forecast_imputation():
+    dirs_ = os.listdir( PROJECT_ROOT+ DATA_DIR+ '/history_cleaned')
+    dirs_ = [PROJECT_ROOT+ DATA_DIR+'/history_cleaned/'+str(dir_) for dir_ in dirs_]
+    for dir_ in dirs_:
+        tmp = pd.read_csv(dir_)
+        tmp["Time"] = tmp["Time"].apply(
+                lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S")
+        )
+        added = 0
+        for i, row in tmp[:-1].iterrows():
+                row = pd.DataFrame(row).transpose()
+                time_diff = int((tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') / 0.25) -1 
+                if time_diff != 0:
+                        new_row = []
+                        for j in range(time_diff):
+                            row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
+                            new_row.append(row.copy())
+                        tmp = pd.concat([tmp[:i+added+1]] + new_row + [tmp[i+added+1:]])
+                        added += time_diff                        
+        tmp.to_csv(dir_,index=False)
+
 
 def main(args):
     
@@ -31,12 +56,13 @@ def main(args):
         parse_data(i)
     print("=============== Parsing dataset complete ===============")
 
+    forecast_imputation()
 
     # Load configurations
     configs = load_config("config.yml")
     modelConfig = configs["model"]
 
-    time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    time = dt.now().strftime("%d-%m-%Y %H:%M:%S")
     logdir = "runs/" + time
     
     # Initialize SummaryWriter for tensorboard
