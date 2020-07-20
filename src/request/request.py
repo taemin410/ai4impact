@@ -10,6 +10,9 @@ def submit_answer(pred_val):
             }
 
     res = requests.post(URL, data = payload)
-
     print("response", res.text)
+
+def test_get_method():
+    res = requests.get('http://localhost:4000/users')
+    print(res.content)
 

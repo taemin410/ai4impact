@@ -6,13 +6,14 @@ from src.model import NN_Model
 from src.trade.trader import Trader
 from src.utils.logger import Logger
 from datetime import datetime
-from src.request.request import submit_answer
+from src.request.request import submit_answer, test_get_method
 import argparse
 import torch
 import threading
+import time
 from datetime import datetime
 
-RESUBMISSION_TIME_INTERVAL = 600
+RESUBMISSION_TIME_INTERVAL = 3600
 
 def write_configs(writer, configs):
     configstr = ""
@@ -82,10 +83,11 @@ def main(args):
     return ypred
 
 def run_submission_session():
-    threading.Timer(RESUBMISSION_TIME_INTERVAL, run_submission_session).start()
-    
-    pred_val = main(args)
-    submit_answer(pred_val)
+    while True:
+        time.sleep(RESUBMISSION_TIME_INTERVAL)
+        
+        pred_val = main(args)
+        submit_answer(pred_val)
 
 if __name__ == "__main__":
 
