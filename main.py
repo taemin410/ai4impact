@@ -20,7 +20,7 @@ import pandas as pd
 import numpy as np 
 from settings import PROJECT_ROOT, DATA_DIR
 
-RESUBMISSION_TIME_INTERVAL = 600
+RESUBMISSION_TIME_INTERVAL = 3600
 
 def write_configs(writer, configs):
     configstr = ""
@@ -132,13 +132,23 @@ def main(args):
 
 def run_submission_session():
     while True:
+        ###########################
+        start = dt.now()
+        ###########################
         pred_val = main(args)
         submit_answer(pred_val)
-
-        print("WAITING FOR ...", RESUBMISSION_TIME_INTERVAL , " seconds")
-        time.sleep(RESUBMISSION_TIME_INTERVAL)
+        ###########################
+        end = dt.now()
+        ###########################
+        
+        ###########################
+        elapsed = (end - start).seconds
+        wait_time = RESUBMISSION_TIME_INTERVAL-elapsed
+        ###########################
+        print("WAITING FOR ...", wait_time , " seconds")
+        time.sleep(wait_time)
         print("TIME: ", datetime.now(), "Starting main()")
-
+        ###########################
 
 if __name__ == "__main__":
 
