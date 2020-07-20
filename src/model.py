@@ -92,7 +92,6 @@ class NN_Model(nn.Module):
         print("---train finished---")
 
     def test(self, test_loader):
-
         testX = test_loader.dataset.tensors[0]
         testY = test_loader.dataset.tensors[1]
 
@@ -106,6 +105,11 @@ class NN_Model(nn.Module):
             )
 
         return (rmse, ypred, testY)
+
+    def predict(self, testX):
+        ypred = self(testX).squeeze(1).item()
+        return ypred
+
 
     def careful_predict_loss_func(self, pred, target):
         loss = 0
