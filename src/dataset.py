@@ -329,7 +329,7 @@ class final_dataset(data.Dataset):
 
 
 def load_dataset(
-    window=5,
+    window=10,
     ltime=18,
     difference=1,
     version=0,
