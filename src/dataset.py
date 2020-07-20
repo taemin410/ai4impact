@@ -7,7 +7,6 @@ import numpy as np
 import sys, os
 
 from .preprocessing import *
-print(sys.path)
 if "/src" in sys.path[0]:
     from preprocessing import *
 # else:
@@ -19,8 +18,6 @@ sys.path.insert(0, os.path.abspath(os.path.join("..")))
 from settings import PROJECT_ROOT, DATA_DIR
 from torch.utils.data import SequentialSampler
 
-FORECAST_ROW_NUM = 5137
-FORECAST_TIME_INTERVAL = 6
 
 def normalize(data):
     if data.dim() == 1:
@@ -45,7 +42,6 @@ class weather_data(data.Dataset):
         self.version = version
         self.last_idx = min([region.shape[0] for region in self.data])
 
-
     def __getitem__(self, idx):
         if isinstance(idx, int):
             idx = slice(idx - 1, idx, 1)
@@ -68,11 +64,10 @@ class weather_data(data.Dataset):
         elif version == 2:
             dirs_ = [dir_ for dir_ in dirs_ if "-b" in dir_]
         for dir_ in dirs_:
-            print(dir_)
             tmp = pd.read_csv(dir_, header=0)
-            tmp["Time"] = tmp["Time"].apply(
-                lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S")
-            )
+            # tmp["Time"] = tmp["Time"].apply(
+            #     lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S")
+            # )
             tmp = tmp.values
             time = tmp[:, 1]
 
@@ -147,8 +142,8 @@ class wind_data_v2(data.Dataset):
         self.normalize = normalize
 
         self.data, self.time_frame, self.raw = self.load_data(wind_dir)
-        if difference == 1:
-            self.data, self.time_frame, self.raw = self.to_difference()
+        # if difference == 1:
+        #     self.data, self.time_frame, self.raw = self.to_difference()
         self.first_idx = 2  * ltime
         self.last_idx = last_idx
 
@@ -235,7 +230,7 @@ class wind_data_v2(data.Dataset):
         for i in iter(indices):
             out.append(data[i - window : i].unsqueeze(0))
         return torch.cat(out, axis=0)
-
+ 
     def __repr__(self):
         return "Wind Data : " + str(self.data.shape)
 
@@ -245,8 +240,7 @@ class wind_data_v2(data.Dataset):
 
 class final_dataset(data.Dataset):
     def __init__(
-        self, window=5, ltime=18, difference=1, version=0, root=None, normalize=1
-    ):
+        self, window=5, ltime=18, difference=1, version=0, root=None, normalize=1):
         """
             Attributes:
                 data : torch.Tensor
@@ -285,7 +279,7 @@ class final_dataset(data.Dataset):
                 window=window,
                 ltime=ltime,
                 difference=difference,
-                wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",
+                wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy_v2.csv",
                 normalize=normalize,
             )
         self.first_idx = 2  * ltime
@@ -308,7 +302,6 @@ class final_dataset(data.Dataset):
 
     def format(self, idx):
         # pdb.set_trace()
-        # dataset[:20] => slice(None, 20, None) | dataset[1:20] slice (1,20,None)
         start = 0 if idx.start == None else idx.start
         end = self.last_idx if idx.stop == None else idx.stop
         if start >= 0:
