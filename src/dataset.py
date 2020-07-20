@@ -291,10 +291,7 @@ def load_dataset(window=5, ltime=18, difference=1, version=0, split_ratio=0.2, v
         val_ratio = train/val split ratio (train/val is split from the training dataset constructed by the ratio of split_ratio)
         batch_size 
     '''
-    if root is not None:
-        dataset = final_dataset(window, ltime, difference, version, root,0)
-    else:
-        dataset = final_dataset(window, ltime, difference, version,normalize)
+    dataset = final_dataset(window, ltime, difference, version, root,0)
     dataset_size = len(dataset)
     
     indices = list(range(dataset_size))
