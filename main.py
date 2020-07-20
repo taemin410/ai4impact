@@ -6,9 +6,13 @@ from src.model import NN_Model
 from src.trade.trader import Trader
 from src.utils.logger import Logger
 from datetime import datetime
+from src.request.request import submit_answer
 import argparse
 import torch
+import threading
 from datetime import datetime
+
+RESUBMISSION_TIME_INTERVAL = 600
 
 def write_configs(writer, configs):
     configstr = ""
@@ -73,7 +77,15 @@ def main(args):
     print ("tota profit", result)
 
     writer.close()
+    
+    print (ypred)
+    return ypred
 
+def run_submission_session():
+    threading.Timer(RESUBMISSION_TIME_INTERVAL, run_submission_session).start()
+    
+    pred_val = main(args)
+    submit_answer(pred_val)
 
 if __name__ == "__main__":
 
@@ -85,4 +97,9 @@ if __name__ == "__main__":
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    globals()[args.mode](args)
+    # globals()[args.mode](args)
+    run_submission_session()
+    
+    
+    
+    
