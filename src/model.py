@@ -5,6 +5,8 @@ from torch.utils.data import dataloader
 from torch.optim.lr_scheduler import StepLR
 import math
 
+# def custom_loss(output, ytrue):
+
 class NN_Model(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_layers, writer, device):
         super().__init__()
@@ -31,7 +33,6 @@ class NN_Model(nn.Module):
         # self.dropout1 = nn.Dropout(p=0.1)
 
     def forward(self, x):
-        # x = x.to(self.device)
         x0 = x[:,4].unsqueeze(1).clone()
         for layer in self.layers[:-1]:
             x = F.relu(layer(x))
@@ -129,11 +130,27 @@ class NN_Model(nn.Module):
 
 
 class Persistance(nn.Module):
-    def __init(self, delay):
-        super().init()
+    def __init__(self, delay, writer):
+        super().__init__()
         self.delay = delay
-
+        self.writer = writer
     def forward(self, x):
         if self.delay == 0:
             return x
         return x[:, -self.delay]
+
+
+    def test(self, test_loader):
+        testX = test_loader.dataset.tensors[0]
+        testY = test_loader.dataset.tensors[1]
+        
+        ypred = self(testX)
+        result = (testY - ypred) ** 2  # squared error
+
+        rmse = (torch.sum(result) / result.shape[0]) ** 0.5  # root mean squared error
+        for i in range(list(testY.size())[0]):
+            self.writer.add_scalars(
+                "test/baseline", {"ypred": ypred[i], "ytrue": testY[i],}, i
+            )
+
+        return (rmse, ypred, testY)
