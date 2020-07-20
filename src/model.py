@@ -61,7 +61,6 @@ class NN_Model(nn.Module):
                 outputs = outputs.squeeze(1)
 
                 # obtain the loss function
-                # TODO: Add tensorboard write
                 loss = self.log_cosh_loss_func(outputs, yy)
                 loss_sum += loss.item()
                 loss.backward()
@@ -109,7 +108,6 @@ class NN_Model(nn.Module):
     def predict(self, testX):
         ypred = self(testX).squeeze(1).item()
         return ypred
-
 
     def careful_predict_loss_func(self, pred, target):
         loss = 0

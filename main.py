@@ -20,7 +20,7 @@ import pandas as pd
 import numpy as np 
 from settings import PROJECT_ROOT, DATA_DIR
 
-RESUBMISSION_TIME_INTERVAL = 600
+RESUBMISSION_TIME_INTERVAL = 3600
 
 def write_configs(writer, configs):
     configstr = ""
