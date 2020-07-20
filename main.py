@@ -106,6 +106,8 @@ def main(args):
 def run_submission_session():
     while True:
         pred_val = main(args)
+        print("prediction value:", pred_val)
+
         submit_answer(pred_val)
 
         time.sleep(RESUBMISSION_TIME_INTERVAL)

@@ -10,13 +10,8 @@ from .preprocessing import *
 print(sys.path)
 if "/src" in sys.path[0]:
     from preprocessing import *
-<<<<<<< HEAD
-else:
-    from src.preprocessing import *
-=======
 # else:
 #     from src.preprocessing import *
->>>>>>> f27e32fbf530646d031c39c3d1d9a735c5c78752
 # from pdb_clone import pdb
 
 sys.path.insert(0, os.path.abspath(os.path.join("..")))
