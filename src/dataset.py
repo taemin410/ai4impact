@@ -39,8 +39,8 @@ class weather_data(data.Dataset):
         self.data, self.time_frame = self.load_data(self.weather_dirs_,version)
         self.time_interval = time_interval
         self.version = version
-        self.last_idx = FORECAST_ROW_NUM 
-
+        # self.last_idx = FORECAST_ROW_NUM 
+        self.last_idx = self.data.shape[0]
 
     def __getitem__(self,idx):
         if isinstance(idx,int):
@@ -113,7 +113,7 @@ class wind_data_v2(data.Dataset):
     '''
     difference between v1 v2 is that preprocessing happens inside the class
     '''
-    def __init__(self, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=1):
+    def __init__(self, window=5, ltime=18, difference=1, wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=1, last_idx=last_idx):
         '''
         Attributes:
             data : torch.Tensor
@@ -127,8 +127,8 @@ class wind_data_v2(data.Dataset):
         self.data, self.time_frame, self.raw = self.load_data(wind_dir)
         if difference == 1: 
             self.data, self.time_frame, self.raw= self.to_difference()
-        self.first_idx = (2 + difference) * ltime
-        self.last_idx = FORECAST_ROW_NUM * FORECAST_TIME_INTERVAL - 48
+        self.first_idx = 2  * ltime
+        self.last_idx = last_idx
     def __getitem__(self,idx):
         if isinstance(idx,int):
             idx = slice(idx , idx+1, 1)
@@ -230,15 +230,16 @@ class final_dataset(data.Dataset):
             self.difference = difference
             self.normalize = normalize
             if root != None:
-                self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=root+'/wind_energy_v2.csv',normalize=0)
                 self.weather_data = weather_data(version=version, root=root+'/history_cleaned/',normalize=0)
+                last_idx = self.weather_data.last_idx * 6 - 48
+                self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=root+'/wind_energy_v2.csv',normalize=0)
             else:
-                self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=normalize)
                 self.weather_data = weather_data(version=version, root=PROJECT_ROOT + DATA_DIR + "/history_cleaned/",normalize=normalize)
-            self.first_idx = (2 + difference) * ltime
+                last_idx = self.weather_data.last_idx * 6 - 48
+                self.wind_data = wind_data_v2(window=window,ltime=ltime,difference=difference,wind_dir=PROJECT_ROOT + DATA_DIR + "/wind_energy.csv",normalize=normalize,last_idx=last_idx)
+            self.first_idx = 2  * ltime
             # maximum index that has a target
-            self.last_idx = FORECAST_ROW_NUM * FORECAST_TIME_INTERVAL - 48 # min([a.data.shape[0] * 6 for a in self.weather_data.data ]) - 8
-
+            self.last_idx = last_idx
     def collect_weather(self, idx):
         return self.weather_data.collect_forcast(idx)
 
