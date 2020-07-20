@@ -132,15 +132,25 @@ def main(args):
 
 def run_submission_session():
     while True:
+        ###########################
+        start = dt.now()
+        ###########################
         pred_val = main(args)
         print("prediction value:", pred_val)
 
         submit_answer(pred_val)
-
-        print("WAITING FOR ...", RESUBMISSION_TIME_INTERVAL , " seconds")
-        time.sleep(RESUBMISSION_TIME_INTERVAL)
+        ###########################
+        end = dt.now()
+        ###########################
+        
+        ###########################
+        elapsed = (end - start).seconds
+        wait_time = RESUBMISSION_TIME_INTERVAL-elapsed
+        ###########################
+        print("WAITING FOR ...", wait_time , " seconds")
+        time.sleep(wait_time)
         print("TIME: ", datetime.now(), "Starting main()")
-
+        ###########################
 
 if __name__ == "__main__":
 
