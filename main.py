@@ -52,12 +52,12 @@ def forecast_imputation():
 
 def main(args):
     
-    # paths = download_data()
-    # for i in paths:
-    #     parse_data(i)
-    # print("=============== Parsing dataset complete ===============")
+    paths = download_data()
+    for i in paths:
+        parse_data(i)
+    print("=============== Parsing dataset complete ===============")
 
-    # forecast_imputation()
+    forecast_imputation()
 
     # Load configurations
     configs = load_config("config.yml")
