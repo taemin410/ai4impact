@@ -5,6 +5,8 @@ from torch.utils.data import dataloader
 from torch.optim.lr_scheduler import StepLR
 import math
 
+# def custom_loss(output, ytrue):
+
 class NN_Model(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_layers, writer):
         super().__init__()
