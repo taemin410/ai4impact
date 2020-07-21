@@ -7,7 +7,7 @@ import numpy as np
 import sys, os
 from preprocessing import *
 
-# from .preprocessing import *
+from .preprocessing import *
 if "/src" in sys.path[0]:
     from preprocessing import *
 # else:
@@ -38,11 +38,13 @@ class weather_data(data.Dataset):
     ):
         self.weather_dirs_ = [root + str(dir_) for dir_ in os.listdir(root)]
         self.normalize = normalize
+        self.x_mean = []
+        self.x_std = []
+
         self.data, self.time_frame = self.load_data(self.weather_dirs_, version)
         self.time_interval = time_interval
         self.version = version
         self.last_idx = min([region.shape[0] for region in self.data])
-
     def __getitem__(self, idx):
         if isinstance(idx, int):
             idx = slice(idx - 1, idx, 1)
@@ -76,7 +78,9 @@ class weather_data(data.Dataset):
             speed_direction = torch.Tensor(speed_direction_np)
             # normalize speed
             if self.normalize:
-                speed_direction[:, 0], self.x_mean, self.x_std = normalize(speed_direction[:, 0])
+                speed_direction[:, 0], mean, std = normalize(speed_direction[:, 0])
+                self.x_mean.append(mean.item())
+                self.x_std.append(std.item())
             speed_direction = torch.cat(
                 [
                     speed_direction[:, 0].unsqueeze(1),
@@ -394,16 +398,17 @@ def load_dataset(
         test_dataset, batch_size=batch_size, sampler=test_sampler
     )
 
-    return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std
+    return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std, dataset.weather_data.x_mean, dataset.weather_data.x_std 
 
 def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1):
     wind_data = pd.read_csv(PROJECT_ROOT+ DATA_DIR+'/wind_energy_v2.csv', header=0)
+    wind_data['energy'] = (wind_data['energy'] - x_mean) / x_std
     wind_data["time"] = wind_data["time"].apply(
         lambda x: dt.strptime(x[2:], "%y-%m-%d %H:%M:%S")
     )
     # window
     window_data = wind_data['energy'].iloc[-window:].tolist()
-    window_data = (torch.Tensor(window_data) - x_mean) / x_std
+    window_data = torch.Tensor(window_data) 
     window_avg = torch.mean(window_data).unsqueeze(0)
     window_std = torch.std(window_data).unsqueeze(0)
     
@@ -424,16 +429,19 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1):
     force = x_t_0 - 2 * x_t_h + x_t_2h
 
     dirs_ = os.listdir(PROJECT_ROOT + DATA_DIR + "/forecast")
-    forecast_data = [pd.read_csv(PROJECT_ROOT + DATA_DIR + "/forecast/"+ dir_,header=0) for dir_ in dirs_ ]
+    forecast_data = [pd.read_csv(PROJECT_ROOT + DATA_DIR + "/forecast/"+ dir_) for dir_ in dirs_ ]
     forecast_features = []
-    for region in forecast_data:
+    for region, mean, std in zip(forecast_data, forecast_mean, forecast_std):
         region['Time'] = region['Time'].apply(lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S"))
+        region['Speed(m/s)'] = (region['Speed(m/s)'] - mean)/std
+                
         region_data = []
         for i, row in region.iterrows():
             time_diff = (row['Time'] - last_row['time']) /np.timedelta64(1,'h')
             if  time_diff < 6 and time_diff > 0:
                 for j in range(8):
                     region_data.append(region[['Speed(m/s)','Direction (deg N)']].iloc[i+ 2*j].tolist())
+
                 forecast_features.append(region_data)
                 break
     # pdb.set_trace()

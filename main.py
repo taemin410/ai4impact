@@ -66,17 +66,17 @@ def main(args):
     time = dt.now().strftime("%d-%m-%Y %H:%M:%S")
     logdir = "runs/" + time
     
-    # Initialize SummaryWriter for tensorboard
+    # # Initialize SummaryWriter for tensorboard
     writer = Logger(logdir)
     write_configs(writer, modelConfig)
   
-    # Preprocess the data
-    train_loader, validation_loader, test_loader, data_mean, data_std = load_dataset(
+    # # Preprocess the data
+    train_loader, validation_loader, test_loader, data_mean, data_std, forecast_mean, forecast_std = load_dataset(
         difference=0,
         batch_size=modelConfig["batchsize"]
     )
     
-    # Baseline model
+    # # Baseline model
     # baseline_model = Persistance(18, writer)
     # initialize Model
     model = NN_Model(
@@ -96,12 +96,9 @@ def main(args):
         gamma=modelConfig["gamma"],
         weight_decay=modelConfig["weight_decay"]
     )
-    print("@@@@@@@@@testloader: ", test_loader.dataset.tensors)
-
-    latest_datum = load_latest(10, 18, data_mean.item(), data_std.item() )
-    print("latest datum shape: ",latest_datum.shape)
-    ypred = model.predict(latest_datum)
-    
+    x = load_latest(10,18,data_mean.item(),data_std.item(), forecast_mean, forecast_std)
+    print(x.shape)
+    ypred = model.predict(x)
     y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
 
     # b_rmse, b_ypred, b_ytest = baseline_model.test(test_loader)
