@@ -96,8 +96,10 @@ def main(args):
         gamma=modelConfig["gamma"],
         weight_decay=modelConfig["weight_decay"]
     )
+    print("@@@@@@@@@testloader: ", test_loader.dataset.tensors)
 
     ypred = model.predict(test_loader.dataset.tensors[0])
+    
     y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
 
     # b_rmse, b_ypred, b_ytest = baseline_model.test(test_loader)

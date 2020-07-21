@@ -357,7 +357,10 @@ def load_dataset(
     split = int(np.floor((1 - split_ratio) * dataset_size))
     val_split = int(split * (1 - val_ratio))
 
-    split = -1
+    #temp indices for real trading
+    # train_start_split = int(np.floor(split_ratio * dataset_size))
+    split = -10
+
     # split idxs
     train_indices, test_indices = indices[:split], indices[split:]
     train_indices, val_indices = train_indices[:val_split], train_indices[val_split:]
