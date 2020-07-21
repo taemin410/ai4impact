@@ -11,7 +11,7 @@ if "/src" in sys.path[0]:
     from preprocessing import *
 # else:
 #     from src.preprocessing import *
-# from pdb_clone import pdb
+from pdb_clone import pdb
 
 sys.path.insert(0, os.path.abspath(os.path.join("..")))
 
@@ -319,6 +319,7 @@ class final_dataset(data.Dataset):
         wind_x, y = self.wind_data[idx]
 
         weather_x = self.collect_weather(idx)
+        # print(wind_x.shape, weather_x.shape)
         x = torch.cat([wind_x, weather_x], axis=1)
 
         return x, y
@@ -390,11 +391,56 @@ def load_dataset(
 
     return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std
 
+def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1):
+    wind_data = pd.read_csv(PROJECT_ROOT+ DATA_DIR+'/wind_energy_v2.csv', header=0)
+    wind_data["time"] = wind_data["time"].apply(
+        lambda x: dt.strptime(x[2:], "%y-%m-%d %H:%M:%S")
+    )
+    # window
+    window_data = wind_data['energy'].iloc[-window:].tolist()
+    window_data = (torch.Tensor(window_data) - x_mean) / x_std
+    window_avg = torch.mean(window_data).unsqueeze(0)
+    window_std = torch.std(window_data).unsqueeze(0)
+    
+    # time feature
+    last_row = wind_data.iloc[-1]
+    zero_time = torch.Tensor([0] * 24)
+    zero_month = torch.Tensor([0] * 12)
+    
+    zero_month[last_row['time'].month -1] = 1
+    zero_time[last_row['time'].hour -1] = 1
+    time_feature = torch.cat([zero_time, zero_month], axis=0)  
+    # difference features
+    x_t_h = torch.Tensor([wind_data['energy'].iloc[-ltime]])
+    x_t_2h = torch.Tensor([wind_data['energy'].iloc[-2 * ltime]])
+    x_t_0 = torch.Tensor([wind_data['energy'].iloc[-1]])
+ 
+    momentum = x_t_0 - x_t_h
+    force = x_t_0 - 2 * x_t_h + x_t_2h
+
+    dirs_ = os.listdir(PROJECT_ROOT + DATA_DIR + "/forecast")
+    forecast_data = [pd.read_csv(PROJECT_ROOT + DATA_DIR + "/forecast/"+ dir_,header=0) for dir_ in dirs_ ]
+    forecast_features = []
+    for region in forecast_data:
+        region['Time'] = region['Time'].apply(lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S"))
+        region_data = []
+        for i, row in region.iterrows():
+            time_diff = (row['Time'] - last_row['time']) /np.timedelta64(1,'h')
+            if  time_diff < 6 and time_diff > 0:
+                for j in range(8):
+                    region_data.append(region[['Speed(m/s)','Direction (deg N)']].iloc[i+ 2*j].tolist())
+                forecast_features.append(region_data)
+                break
+    # pdb.set_trace()
+    forecast_features = torch.Tensor(forecast_features)
+    forecast_features = forecast_features.reshape(-1,2)
+    sin_cos = change_representation(forecast_features[:,1])
+    forecast_features = torch.cat([forecast_features[:,0].unsqueeze(1), sin_cos], axis=1)
+    forecast_features = forecast_features.reshape(-1)
+    # when window = 5 
+    # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 384
+    return torch.cat([window_data, momentum, force, time_feature, window_avg, window_std, forecast_features], axis=0).unsqueeze(0)
 
 if __name__ == "__main__":
-    pass
-#     dataset = final_dataset(difference=0, version=0)
-#     x, y = dataset[3]
-#     print(x, y)
-    # train,val,test = load_dataset()
-
+    out = load_latest()
+    print(out.shape)
