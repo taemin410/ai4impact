@@ -5,6 +5,7 @@ import datetime
 from datetime import datetime as dt
 import numpy as np
 import sys, os
+from preprocessing import *
 
 # from .preprocessing import *
 if "/src" in sys.path[0]:
@@ -395,7 +396,7 @@ def load_dataset(
 
     return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std
 
-def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1):
+def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1):
     wind_data = pd.read_csv(PROJECT_ROOT+ DATA_DIR+'/wind_energy_v2.csv', header=0)
     wind_data["time"] = wind_data["time"].apply(
         lambda x: dt.strptime(x[2:], "%y-%m-%d %H:%M:%S")
@@ -442,8 +443,18 @@ def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1):
     forecast_features = torch.cat([forecast_features[:,0].unsqueeze(1), sin_cos], axis=1)
     forecast_features = forecast_features.reshape(-1)
     print(forecast_features.shape)
+    
+    
     # when window = 5 
     # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 429
+    print("window_data: ", window_data.shape)
+    print("momentum: ", momentum.shape)
+    print("force: ", force.shape)
+    print("time_feature", time_feature.shape)
+    print("window_avg", window_avg.shape)
+    print("window_std: ", window_std.shape)
+    print("forecast_features: ", forecast_features.shape)
+
     return torch.cat([window_data, momentum, force, time_feature, window_avg, window_std, forecast_features], axis=0).unsqueeze(0)
 
 if __name__ == "__main__":

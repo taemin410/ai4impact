@@ -98,7 +98,9 @@ def main(args):
     )
     print("@@@@@@@@@testloader: ", test_loader.dataset.tensors)
 
-    ypred = model.predict(load_latest())
+    latest_datum = load_latest(10, 18, data_mean.item(), data_std.item() )
+    print("latest datum shape: ",latest_datum.shape)
+    ypred = model.predict(latest_datum)
     
     y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
 
