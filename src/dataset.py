@@ -6,7 +6,7 @@ from datetime import datetime as dt
 import numpy as np
 import sys, os
 
-from .preprocessing import *
+# from .preprocessing import *
 if "/src" in sys.path[0]:
     from preprocessing import *
 # else:
@@ -439,7 +439,7 @@ def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1):
     forecast_features = torch.cat([forecast_features[:,0].unsqueeze(1), sin_cos], axis=1)
     forecast_features = forecast_features.reshape(-1)
     # when window = 5 
-    # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 384
+    # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 429
     return torch.cat([window_data, momentum, force, time_feature, window_avg, window_std, forecast_features], axis=0).unsqueeze(0)
 
 if __name__ == "__main__":
