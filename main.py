@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from src.dataset import final_dataset, load_dataset
+from src.dataset import final_dataset, load_dataset, load_latest
 from src.utils.config import load_config
 from src.model import NN_Model, Persistance
 from src.trade.trader import Trader
@@ -98,7 +98,7 @@ def main(args):
     )
     print("@@@@@@@@@testloader: ", test_loader.dataset.tensors)
 
-    ypred = model.predict(test_loader.dataset.tensors[0])
+    ypred = model.predict(load_latest())
     
     y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
 

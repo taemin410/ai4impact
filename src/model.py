@@ -106,7 +106,7 @@ class NN_Model(nn.Module):
         return (rmse, ypred, testY)
 
     def predict(self, testX):
-        ypred = self(testX).squeeze(1).item()
+        ypred = self(testX).item()
         return ypred
 
     def careful_predict_loss_func(self, pred, target):

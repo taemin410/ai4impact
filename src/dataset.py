@@ -11,7 +11,7 @@ if "/src" in sys.path[0]:
     from preprocessing import *
 # else:
 #     from src.preprocessing import *
-from pdb_clone import pdb
+# from pdb_clone import pdb
 
 sys.path.insert(0, os.path.abspath(os.path.join("..")))
 
@@ -360,7 +360,7 @@ def load_dataset(
 
     #temp indices for real trading
     # train_start_split = int(np.floor(split_ratio * dataset_size))
-    split = -10
+    split = -1
 
     # split idxs
     train_indices, test_indices = indices[:split], indices[split:]
@@ -441,6 +441,7 @@ def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1):
     sin_cos = change_representation(forecast_features[:,1])
     forecast_features = torch.cat([forecast_features[:,0].unsqueeze(1), sin_cos], axis=1)
     forecast_features = forecast_features.reshape(-1)
+    print(forecast_features.shape)
     # when window = 5 
     # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 384
     return torch.cat([window_data, momentum, force, time_feature, window_avg, window_std, forecast_features], axis=0).unsqueeze(0)
