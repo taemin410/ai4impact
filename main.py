@@ -149,7 +149,7 @@ def run_submission_session():
         ###########################
         print("WAITING FOR ...", wait_time , " seconds")
         time.sleep(wait_time)
-        print("TIME: ", datetime.now(), "Starting main()")
+        print("TIME: ", dt.now(), "Starting main()")
         ###########################
 
 if __name__ == "__main__":
