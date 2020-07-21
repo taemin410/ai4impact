@@ -14,12 +14,13 @@ import torch
 import threading
 from datetime import datetime as dt
 import datetime
+import time
 import os
 import pandas as pd
 import numpy as np 
 from settings import PROJECT_ROOT, DATA_DIR
 
-RESUBMISSION_TIME_INTERVAL = 600
+RESUBMISSION_TIME_INTERVAL = 3600
 
 def write_configs(writer, configs):
     configstr = ""
@@ -97,7 +98,7 @@ def main(args):
     )
 
     ypred = model.predict(test_loader.dataset.tensors[0])
-    y_pred_unnormalized  = (ypred * data_std) + data_mean
+    y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
 
     # b_rmse, b_ypred, b_ytest = baseline_model.test(test_loader)
     # rmse, ypred, ytest = model.test(test_loader)
@@ -126,17 +127,28 @@ def main(args):
 
     writer.close()
     
-    print (y_pred_unnormalized)
+    print ("ypred: " , y_pred_unnormalized)
     return y_pred_unnormalized
 
 def run_submission_session():
     while True:
+        ###########################
+        start = dt.now()
+        ###########################
         pred_val = main(args)
         submit_answer(pred_val)
-
-        time.sleep(RESUBMISSION_TIME_INTERVAL)
-        print("TIME: ", datetime.now(), "Starting main()")
-
+        ###########################
+        end = dt.now()
+        ###########################
+        
+        ###########################
+        elapsed = (end - start).seconds
+        wait_time = RESUBMISSION_TIME_INTERVAL-elapsed
+        ###########################
+        print("WAITING FOR ...", wait_time , " seconds")
+        time.sleep(wait_time)
+        print("TIME: ", dt.now(), "Starting main()")
+        ###########################
 
 if __name__ == "__main__":
 
