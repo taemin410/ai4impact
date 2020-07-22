@@ -52,7 +52,11 @@ def forecast_imputation():
 
 
 def main(args):
+<<<<<<< HEAD
     print(args)
+=======
+    
+>>>>>>> 85795af870a5bc552a7b3d2280e7b687e8bfa715
     paths = download_data()
     for i in paths:
         parse_data(i)
