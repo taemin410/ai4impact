@@ -465,7 +465,6 @@ def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1, forecast_mean=[0]*16, for
                 to_add = region[['Speed(m/s)','Direction (deg N)']].values.tolist()
                 for _ in range(short_by):
                     to_add.append(region[['Speed(m/s)','Direction (deg N)']].iloc[-1].tolist())
-                print(to_add)
                 forecast_features.append(to_add)
 
     # pdb.set_trace()
