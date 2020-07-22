@@ -427,19 +427,47 @@ def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1, forecast_mean=[0]*16, for
     dirs_ = os.listdir(PROJECT_ROOT + DATA_DIR + "/forecast")
     forecast_data = [pd.read_csv(PROJECT_ROOT + DATA_DIR + "/forecast/"+ dir_) for dir_ in dirs_ ]
     forecast_features = []
+
+    print('Retrieving features of timeframe : ',last_row['time'])
     for region, mean, std in zip(forecast_data, forecast_mean, forecast_std):
         region['Time'] = region['Time'].apply(lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S"))
         region['Speed(m/s)'] = (region['Speed(m/s)'] - mean)/std
                 
         region_data = []
+        imputation_n_retreive = 0
         for i, row in region.iterrows():
             time_diff = (row['Time'] - last_row['time']) /np.timedelta64(1,'h')
-            if  time_diff < 6 and time_diff > 0:
-                for j in range(8):
-                    region_data.append(region[['Speed(m/s)','Direction (deg N)']].iloc[i+ 2*j].tolist())
-
-                forecast_features.append(region_data)
+            if  time_diff < 9 and time_diff > 0:
+                if region.shape[0] - i > 16:    
+                    for j in range(8):
+                        region_data.append(region[['Speed(m/s)','Direction (deg N)']].iloc[i+ 2*j].tolist())
+                    forecast_features.append(region_data)
+                else:
+                    imputation_n_retreive = 1
                 break
+        if imputation_n_retreive:
+            added = 0
+            for i, row in region[:-1].iterrows():
+                row = pd.DataFrame(row).transpose()
+                time_diff = int((region['Time'][i+1] - region['Time'][i])/np.timedelta64(1,'D') / 0.25 -1) 
+                if time_diff > 0:
+                    new_row = []
+                    for j in range(time_diff):
+                        row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
+                        new_row.append(row.copy())
+                    region = pd.concat([region[:i+added+1]] + new_row + [region[i+added+1:]])
+                    added += time_diff
+            if region.shape[0] > 8:     
+                forecast_features.append(region[['Speed(m/s)','Direction (deg N)']].iloc[-8:].values.tolist())
+            else:
+                # when there is less than 8 rows after imputation
+                short_by = 8 - region.shape[0]
+                to_add = region[['Speed(m/s)','Direction (deg N)']].values.tolist()
+                for _ in range(short_by):
+                    to_add.append(region[['Speed(m/s)','Direction (deg N)']].iloc[-1].tolist())
+                print(to_add)
+                forecast_features.append(to_add)
+
     # pdb.set_trace()
     forecast_features = torch.Tensor(forecast_features)
     forecast_features = forecast_features.reshape(-1,2)

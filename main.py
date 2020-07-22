@@ -87,15 +87,15 @@ def main(args):
         device=args.device
     )
 
-    model.train(
-        train_loader,
-        validation_loader,
-        epochs=modelConfig["epochs"],
-        lr=modelConfig["lr"],
-        step_size=modelConfig["step_size"],
-        gamma=modelConfig["gamma"],
-        weight_decay=modelConfig["weight_decay"]
-    )
+    # model.train(
+    #     train_loader,
+    #     validation_loader,
+    #     epochs=modelConfig["epochs"],
+    #     lr=modelConfig["lr"],
+    #     step_size=modelConfig["step_size"],
+    #     gamma=modelConfig["gamma"],
+    #     weight_decay=modelConfig["weight_decay"]
+    # )
     x = load_latest(10,18,data_mean.item(),data_std.item(), forecast_mean, forecast_std)
     print(x.shape)
     ypred = model.predict(x)
