@@ -19,6 +19,7 @@ import os
 import pandas as pd
 import numpy as np 
 from settings import PROJECT_ROOT, DATA_DIR
+from prev import prev_val
 
 RESUBMISSION_TIME_INTERVAL = 3600
 
@@ -51,7 +52,7 @@ def forecast_imputation():
 
 
 def main(args):
-    
+    print(args)
     paths = download_data()
     for i in paths:
         parse_data(i)
@@ -96,10 +97,21 @@ def main(args):
         gamma=modelConfig["gamma"],
         weight_decay=modelConfig["weight_decay"]
     )
-    x = load_latest(10,18,data_mean.item(),data_std.item(), forecast_mean, forecast_std)
-    print(x.shape)
-    ypred = model.predict(x)
-    y_pred_unnormalized  = (ypred * data_std.item()) + data_mean.item()
+    
+
+    try:
+        x = load_latest(10,18,data_mean.item(),data_std.item(), forecast_mean, forecast_std)
+        print(x.shape)
+        ypred = model.predict(x)
+        ypred  = (ypred * data_std.item()) + data_mean.item()
+        print("model running successful")
+    except:
+        print(args)
+        ypred = args.prev
+        print("model running failed... sending prev value")
+
+    args.prev = ypred
+    
 
     # b_rmse, b_ypred, b_ytest = baseline_model.test(test_loader)
     # rmse, ypred, ytest = model.test(test_loader)
@@ -128,8 +140,8 @@ def main(args):
 
     writer.close()
     
-    print ("ypred: " , y_pred_unnormalized)
-    return y_pred_unnormalized
+    print ("ypred: " , ypred)
+    return ypred
 
 def run_submission_session():
     while True:
@@ -162,6 +174,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    args.prev = 9932
 
     # globals()[args.mode](args)
     run_submission_session()

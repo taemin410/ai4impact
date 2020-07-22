@@ -400,7 +400,7 @@ def load_dataset(
 
     return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std, dataset.weather_data.x_mean, dataset.weather_data.x_std 
 
-def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1):
+def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecast_std=1):
     wind_data = pd.read_csv(PROJECT_ROOT+ DATA_DIR+'/wind_energy_v2.csv', header=0)
     wind_data['energy'] = (wind_data['energy'] - x_mean) / x_std
     wind_data["time"] = wind_data["time"].apply(
