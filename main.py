@@ -105,8 +105,8 @@ def main(args):
         ypred = model.predict(x)
         ypred  = (ypred * data_std.item()) + data_mean.item()
         print("model running successful")
-    except:
-        print(args)
+    except Exception as err:
+        print("Error message: ", err)
         ypred = args.prev
         print("model running failed... sending prev value")
 
