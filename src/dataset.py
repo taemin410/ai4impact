@@ -433,7 +433,7 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecas
     forecast_features = []
 
     print('Retrieving features of timeframe : ',last_row['time'])
-    for region, mean, std in zip(forecast_data, forecast_mean, forecast_std):
+    for idx_, (region, mean, std) in enumerate(zip(forecast_data, forecast_mean, forecast_std)):
         region['Time'] = region['Time'].apply(lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S"))
         region['Speed(m/s)'] = (region['Speed(m/s)'] - mean)/std
                 
@@ -449,6 +449,9 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecas
                 else:
                     imputation_n_retreive = 1
                 break
+            elif i == region.shape[0] -1 and imputation_n_retreive == 0:
+                imputation_n_retreive = 1
+                 
         if imputation_n_retreive:
             added = 0
             for i, row in region[:-1].iterrows():
@@ -466,6 +469,7 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecas
             else:
                 # when there is less than 8 rows after imputation
                 short_by = 8 - region.shape[0]
+
                 to_add = region[['Speed(m/s)','Direction (deg N)']].values.tolist()
                 for _ in range(short_by):
                     to_add.append(region[['Speed(m/s)','Direction (deg N)']].iloc[-1].tolist())
@@ -482,14 +486,7 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecas
     
     # when window = 5 
     # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 429
-    print("window_data: ", window_data.shape)
-    print("momentum: ", momentum.shape)
-    print("force: ", force.shape)
-    print("time_feature", time_feature.shape)
-    print("window_avg", window_avg.shape)
-    print("window_std: ", window_std.shape)
-    print("forecast_features: ", forecast_features.shape)
-
+    print([a.shape for a in [window_data, momentum, force, time_feature, window_avg, window_std, forecast_features]])
     return torch.cat([window_data, momentum, force, time_feature, window_avg, window_std, forecast_features], axis=0).unsqueeze(0)
 
 if __name__ == "__main__":
