@@ -61,25 +61,24 @@ class NN_Model(nn.Module):
                 outputs = outputs.squeeze(1)
 
                 # obtain the loss function
-                # TODO: Add tensorboard write
                 loss = self.log_cosh_loss_func(outputs, yy)
                 loss_sum += loss.item()
                 loss.backward()
                 optimizer.step()
 
-            with torch.no_grad():
-                for valX, valY in validationloader:
+            # with torch.no_grad():
+            #     for valX, valY in validationloader:
 
-                    # valX = valX.to(self.device)
-                    # valY = valY.to(self.device)
+            #         # valX = valX.to(self.device)
+            #         # valY = valY.to(self.device)
 
-                    outputs = self(valX).squeeze(1)
-                    val_loss = self.log_cosh_loss_func(outputs, valY)
-                    val_loss_sum += val_loss
-                    # self.writer.draw_validation_result(valY, outputs, epoch)
+            #         outputs = self(valX).squeeze(1)
+            #         val_loss = self.log_cosh_loss_func(outputs, valY)
+            #         val_loss_sum += val_loss
+            #         # self.writer.draw_validation_result(valY, outputs, epoch)
                 
             self.writer.add_scalar("Loss/train", loss_sum / len(trainloader), epoch)
-            self.writer.add_scalar("Loss/validation", val_loss_sum / len(validationloader), epoch)
+            # self.writer.add_scalar("Loss/validation", val_loss_sum / len(validationloader), epoch)
             
             scheduler.step()
 
@@ -107,9 +106,8 @@ class NN_Model(nn.Module):
         return (rmse, ypred, testY)
 
     def predict(self, testX):
-        ypred = self(testX).squeeze(1).item()
+        ypred = self(testX).item()
         return ypred
-
 
     def careful_predict_loss_func(self, pred, target):
         loss = 0

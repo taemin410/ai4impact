@@ -5,13 +5,14 @@ import datetime
 from datetime import datetime as dt
 import numpy as np
 import sys, os
+from preprocessing import *
 
 from .preprocessing import *
 if "/src" in sys.path[0]:
     from preprocessing import *
 # else:
 #     from src.preprocessing import *
-from pdb_clone import pdb
+# from pdb_clone import pdb
 
 sys.path.insert(0, os.path.abspath(os.path.join("..")))
 
@@ -362,7 +363,10 @@ def load_dataset(
     split = int(np.floor((1 - split_ratio) * dataset_size))
     val_split = int(split * (1 - val_ratio))
 
+    #temp indices for real trading
+    # train_start_split = int(np.floor(split_ratio * dataset_size))
     split = -1
+
     # split idxs
     train_indices, test_indices = indices[:split], indices[split:]
     train_indices, val_indices = train_indices[:val_split], train_indices[val_split:]
@@ -396,7 +400,7 @@ def load_dataset(
 
     return train_loader, validation_loader, test_loader, dataset.wind_data.x_mean, dataset.wind_data.x_std, dataset.weather_data.x_mean, dataset.weather_data.x_std 
 
-def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1, forecast_mean=[0]*16, forecast_std=[1]*16):
+def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecast_std=1):
     wind_data = pd.read_csv(PROJECT_ROOT+ DATA_DIR+'/wind_energy_v2.csv', header=0)
     wind_data['energy'] = (wind_data['energy'] - x_mean) / x_std
     wind_data["time"] = wind_data["time"].apply(
@@ -477,6 +481,9 @@ def load_latest(window=5, ltime=18 ,x_mean=0, x_std=1, forecast_mean=[0]*16, for
     sin_cos = change_representation(forecast_features[:,1])
     forecast_features = torch.cat([forecast_features[:,0].unsqueeze(1), sin_cos], axis=1)
     forecast_features = forecast_features.reshape(-1)
+    print(forecast_features.shape)
+    
+    
     # when window = 5 
     # 5 + 1 + 1 + 36 + 1 + 1 + 16*8*3 = 429
     print([a.shape for a in [window_data, momentum, force, time_feature, window_avg, window_std, forecast_features]])

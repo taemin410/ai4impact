@@ -12,4 +12,3 @@ def submit_answer(pred_val):
     res = requests.post(URL, data = payload)
 
     print("response", res.text)
-
