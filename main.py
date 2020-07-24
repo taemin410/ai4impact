@@ -161,18 +161,20 @@ def main(args):
 def run_submission_session():
     while True:
         start = dt.now()
-        
+        bias = 0
         # calculate bias from previous result log
         result_csv = get_result_from_web()
         if result_csv:
             bias = get_bias(result_csv)
             print("bias value: ", bias)
-
+        
         # make predictio
         pred_val = main(args)
         print("prediction value:", pred_val)
+        
+        final_val = pred_val + bias
 
-        # submit_answer(pred_val)
+        submit_answer(pred_val)
 
         end = dt.now()
 
