@@ -459,8 +459,18 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecas
                 time_diff = int((region['Time'][i+1] - region['Time'][i])/np.timedelta64(1,'D') / 0.25 -1) 
                 if time_diff > 0:
                     new_row = []
+                    future_speed = tmp['Speed(m/s)'][i+1]
+                    current_speed = tmp['Speed(m/s)'][i]
+
+                    future_direction = tmp['Direction (deg N)'][i+1]
+                    current_direction = tmp['Direction (deg N)'][i]
+                    
+                    speed_step = (future_speed - current_speed)/ (time_diff + 1)
+                    direction_step = (future_direction - current_direction) / (time_diff + 1)
                     for j in range(time_diff):
                         row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
+                        row['Speed(m/s)'] += speed_step
+                        row['Direction (deg N)'] += direction_step
                         new_row.append(row.copy())
                     region = pd.concat([region[:i+added+1]] + new_row + [region[i+added+1:]])
                     added += time_diff
