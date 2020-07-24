@@ -336,7 +336,7 @@ def load_dataset(
     difference=1,
     version=0,
     split_ratio=0.2,
-    val_ratio=0.2,
+    val_ratio=0.01,
     batch_size=16,
     root=None,
     normalize=1,
