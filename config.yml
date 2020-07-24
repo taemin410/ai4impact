@@ -3,8 +3,8 @@ model:
     mode: train
     lr: 0.001
     batchsize: 16
-    epochs: 1
+    epochs: 30
     step_size: 10
     gamma: 0.1
-    weight_decay: 0
+    weight_decay: 0.0001
     
