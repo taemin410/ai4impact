@@ -39,13 +39,26 @@ def forecast_imputation():
                 lambda x: dt.strptime(x[2:-3] + ":00", "%y-%m-%d %H:%M:%S")
         )
         added = 0
+        # print(dir_)
         for i, row in tmp[:-1].iterrows():
                 row = pd.DataFrame(row).transpose()
                 time_diff = int((tmp['Time'][i+1] - tmp['Time'][i])/np.timedelta64(1,'D') / 0.25) -1 
                 if time_diff != 0:
+                        # print('\t',tmp['Time'][i])
+                        future_speed = tmp['Speed(m/s)'][i+1]
+                        current_speed = tmp['Speed(m/s)'][i]
+                        future_direction = tmp['Direction (deg N)'][i+1]
+                        current_direction = tmp['Direction (deg N)'][i]
+                        
+                        speed_step = (future_speed - current_speed)/ (time_diff + 1)
+                        direction_step = (future_direction - current_direction) / (time_diff + 1)
+
                         new_row = []
                         for j in range(time_diff):
                             row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
+                            row['Speed(m/s)'] += speed_step
+                            row['Direction (deg N)'] += direction_step
+                            
                             new_row.append(row.copy())
                         tmp = pd.concat([tmp[:i+added+1]] + new_row + [tmp[i+added+1:]])
                         added += time_diff                        
