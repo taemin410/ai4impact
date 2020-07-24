@@ -44,6 +44,7 @@ class NN_Model(nn.Module):
 
         # Initialize loss function and optimizer
         criterion = torch.nn.SmoothL1Loss()  # mean-squared error for regression
+        criterion = torch.nn.MSELoss()
         optimizer = torch.optim.Adamax(self.parameters(), lr=lr, weight_decay=weight_decay)
         scheduler = StepLR(optimizer, step_size=step_size, gamma=gamma)
 
@@ -61,24 +62,24 @@ class NN_Model(nn.Module):
                 outputs = outputs.squeeze(1)
 
                 # obtain the loss function
-                loss = self.log_cosh_loss_func(outputs, yy)
+                loss = criterion(outputs, yy)
                 loss_sum += loss.item()
                 loss.backward()
                 optimizer.step()
 
-            # with torch.no_grad():
-            #     for valX, valY in validationloader:
+            with torch.no_grad():
+                for valX, valY in validationloader:
 
-            #         # valX = valX.to(self.device)
-            #         # valY = valY.to(self.device)
+                    # valX = valX.to(self.device)
+                    # valY = valY.to(self.device)
 
-            #         outputs = self(valX).squeeze(1)
-            #         val_loss = self.log_cosh_loss_func(outputs, valY)
-            #         val_loss_sum += val_loss
-            #         # self.writer.draw_validation_result(valY, outputs, epoch)
+                    outputs = self(valX).squeeze(1)
+                    val_loss = criterion(outputs, valY)
+                    val_loss_sum += val_loss
+                    # self.writer.draw_validation_result(valY, outputs, epoch)
                 
             self.writer.add_scalar("Loss/train", loss_sum / len(trainloader), epoch)
-            # self.writer.add_scalar("Loss/validation", val_loss_sum / len(validationloader), epoch)
+            self.writer.add_scalar("Loss/validation", val_loss_sum / len(validationloader), epoch)
             
             scheduler.step()
 

@@ -6,9 +6,10 @@ from src.model import NN_Model, Persistance
 from src.trade.trader import Trader
 from src.utils.logger import Logger
 from src.eval import get_lagged_correlation
+from src.utils.data import *
 from script.download_data import download_data, parse_data
 
-from src.request.request import submit_answer
+from src.request.request import submit_answer, get_result_from_web
 import argparse
 import torch
 import threading
@@ -114,10 +115,11 @@ def main(args):
 
     try:
         x = load_latest(10,18,data_mean.item(),data_std.item(), forecast_mean, forecast_std)
-        print(x.shape)
+
         ypred = model.predict(x)
         ypred  = (ypred * data_std.item()) + data_mean.item()
-        print("model running successful")
+        print("Model running successful!")
+
     except Exception as err:
         print("Error message: ", err)
         ypred = args.prev
@@ -158,25 +160,30 @@ def main(args):
 
 def run_submission_session():
     while True:
-        ###########################
         start = dt.now()
-        ###########################
+        
+        # calculate bias from previous result log
+        result_csv = get_result_from_web()
+        if result_csv:
+            bias = get_bias(result_csv)
+            print("bias value: ", bias)
+
+        # make predictio
         pred_val = main(args)
         print("prediction value:", pred_val)
 
-        submit_answer(pred_val)
-        ###########################
+        # submit_answer(pred_val)
+
         end = dt.now()
-        ###########################
-        
-        ###########################
+
+        # wait for re-submission
         elapsed = (end - start).seconds
-        wait_time = RESUBMISSION_TIME_INTERVAL-elapsed
-        ###########################
-        print("WAITING FOR ...", wait_time , " seconds")
+        wait_time = RESUBMISSION_TIME_INTERVAL - elapsed
+
+        print("WAITING FOR ...", wait_time , " ")
         time.sleep(wait_time)
         print("TIME: ", dt.now(), "Starting main()")
-        ###########################
+
 
 if __name__ == "__main__":
 
