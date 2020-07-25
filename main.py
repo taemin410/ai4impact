@@ -56,9 +56,8 @@ def forecast_imputation():
                         new_row = []
                         for j in range(time_diff):
                             row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
-                            row['Speed(m/s)'] += speed_step
-                            row['Direction (deg N)'] += direction_step
-                            
+                            # row['Speed(m/s)'] += speed_step
+                            # row['Direction (deg N)'] += direction_step
                             new_row.append(row.copy())
                         tmp = pd.concat([tmp[:i+added+1]] + new_row + [tmp[i+added+1:]])
                         added += time_diff                        
@@ -174,6 +173,7 @@ def run_submission_session():
         
         final_val = pred_val + bias
 
+        print("submitting answer as ", pred_val + bias)
         submit_answer(final_val)
 
         end = dt.now()

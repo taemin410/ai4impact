@@ -336,7 +336,7 @@ def load_dataset(
     difference=1,
     version=0,
     split_ratio=0.2,
-    val_ratio=0.01,
+    val_ratio=0.2,
     batch_size=16,
     root=None,
     normalize=1,
@@ -361,7 +361,7 @@ def load_dataset(
 
     indices = list(range(dataset_size))
     split = int(np.floor((1 - split_ratio) * dataset_size))
-    val_split = int(split * (1 - val_ratio))
+    val_split = int(split * (val_ratio))
 
     #temp indices for real trading
     # train_start_split = int(np.floor(split_ratio * dataset_size))
@@ -369,7 +369,7 @@ def load_dataset(
 
     # split idxs
     train_indices, test_indices = indices[:split], indices[split:]
-    train_indices, val_indices = train_indices[:val_split], train_indices[val_split:]
+    val_indices, train_indices = train_indices[:val_split], train_indices[val_split:]
     # create sampler
     train_dataset = dataset[train_indices]
     val_dataset = dataset[val_indices]
@@ -469,8 +469,9 @@ def load_latest(window=10, ltime=18 ,x_mean=0, x_std=1, forecast_mean=0, forecas
                     direction_step = (future_direction - current_direction) / (time_diff + 1)
                     for j in range(time_diff):
                         row['Time'] = row['Time'].apply( lambda x : x + datetime.timedelta(hours=6))
-                        row['Speed(m/s)'] += speed_step
-                        row['Direction (deg N)'] += direction_step
+                        # row['Speed(m/s)'] += speed_step
+                        # row['Direction (deg N)'] += direction_step
+                        
                         new_row.append(row.copy())
                     region = pd.concat([region[:i+added+1]] + new_row + [region[i+added+1:]])
                     added += time_diff

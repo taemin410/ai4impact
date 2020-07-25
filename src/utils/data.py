@@ -4,7 +4,7 @@ import calendar
 import numpy as np
 
 BIN_SIZE = 6
-BIAS_WEIGHT = 0.5
+BIAS_WEIGHT = 0.1
 
 def clean_result_data(result_csv):
     df = pd.DataFrame(result_csv)
